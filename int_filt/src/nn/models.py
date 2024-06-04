@@ -2,9 +2,8 @@
 This file contains the implementation of the backbone models used in the experiments
 """
 import torch
-import torch.autograd as autograd
 
-from ...utils import ConfigData, ModelData, InputData, OutputData, safe_cat, safe_broadcast
+from ...utils import ConfigData, InputData, OutputData, safe_cat
 
 class B_Net(torch.nn.Module):
     """
