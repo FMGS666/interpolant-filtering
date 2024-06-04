@@ -36,7 +36,7 @@ class OUExperiment(Experiment):
         scheduler = optim_config["scheduler"]
         ## initializing objective function
         Lb_config = {
-            "model": self.b_net, 
+            "b_net": self.b_net, 
             "interpolant": self.interpolant, 
             "mc_config": self.mc_config
         }
@@ -53,6 +53,7 @@ class OUExperiment(Experiment):
             y = self.ssm.observation().float()
             ## constructing batch
             batch = {"x0": x0, "x1": x1, "xc": xc, "y": y}
+            ## estimating loss
             loss = Lb.forward(batch)
             loss_value = loss.item()
             ## optimization step

@@ -17,7 +17,7 @@ class DriftObjective(torch.nn.Module):
     def __init__(self, config: Optional[ConfigData]):
         """
         `config`: dictionary expected keys:
-            * model 
+            * b_net 
             * interpolant  
             * mc_config 
         """
@@ -25,7 +25,7 @@ class DriftObjective(torch.nn.Module):
         ## initializing attributes
         self.config = config
         ## parsing configuration dictionary
-        self.model = self.config["model"]
+        self.b_net = self.config["b_net"]
         self.interpolant = self.config["interpolant"]
         self.mc_config = self.config["mc_config"]
 
@@ -62,8 +62,8 @@ class DriftObjective(torch.nn.Module):
             rt = self.interpolant.velocity(mc_batch)
             ## augmenting batch
             mc_batch["xt"] = xt
-            ## performing forward pass on the model
-            bt = self.model(mc_batch)
+            ## performing forward pass on the b_net
+            bt = self.b_net(mc_batch)
             ## computing and storing loss
             loss = mse_loss(bt, rt)
             loss_store[sample_id] = loss

@@ -37,7 +37,7 @@ class SurrSIObjectivesTest(Test):
 
         ## initializing drift objective 
         Lb_config = {
-            "model": self.b_net,
+            "b_net": self.b_net,
             "interpolant": self.interpolant,
             "mc_config": self.mc_config,
         }

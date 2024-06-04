@@ -62,4 +62,15 @@ class Test(unittest.TestCase):
         """
         Tests the function `safe_broadcast` from the `common` module
         """
-        ...
+        ## defining input time and batch
+        t = torch.rand((16))
+        x = torch.zeros((16, 2))
+        ## performing broadcast on time
+        t_broadcasted = safe_broadcast(t, x, unsqueeze_last_dim = False)
+        ## checking the expected shape
+        self.check_shape(t_broadcasted, x.shape)
+        ## checking that the values match
+        t0 = t_broadcasted[:, 0]      
+        t1 = t_broadcasted[:, 1]      
+        self.check_equal(t, t0)
+        self.check_equal(t, t1)

@@ -26,6 +26,7 @@ def configuration(args = None):
     b_net_group.add_argument("--b-net-hidden-dims", "-bhd",  nargs="+", type=int, default = [16])
     b_net_group.add_argument("--b-net-activation", "-bact", default = "relu")
     b_net_group.add_argument("--b-net-activate-final", "-bactfin", action = "store_true")
+    b_net_group.add_argument("--b-net-amortized","-bamrt", action = "store_true")
     ## experiment options
     experiment_group = parser.add_argument_group("Experiment Options")
     experiment_group.add_argument("--experiment", "-exp", default = "ornstein-uhlenbeck")
@@ -51,9 +52,6 @@ def configuration(args = None):
     ## reproducibility options
     reproducibility_group = parser.add_argument_group("Reproducibility Options")
     reproducibility_group.add_argument("--random-seed", "-rs", default = 128, type = int)
-    ## gde options
-    gde_group = parser.add_argument_group("Gradient Density Estimator Options")
-    gde_group.add_argument("--gde", "-gde", default = "pffp")
     ## observation model options
     observation_group = parser.add_argument_group("Observation Model Options")
     observation_group.add_argument("--observation-model", "-os", default = "gaussian")

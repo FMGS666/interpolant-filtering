@@ -27,6 +27,7 @@ def create_experiment(config: ConfigData) -> Experiment:
         b_net_hidden_dims = config["b_net_hidden_dims"]
         b_net_activation = config["b_net_activation"]
         b_net_activate_final = config["b_net_activate_final"]
+        b_net_amortized = config["b_net_amortized"]
         ## mc
         mc_config = config["mc_config"]
         ## logging 
@@ -51,6 +52,7 @@ def create_experiment(config: ConfigData) -> Experiment:
             "b_net_hidden_dims": b_net_hidden_dims,
             "b_net_activation": b_net_activation,
             "b_net_activate_final": b_net_activate_final,
+            "b_net_amortized": b_net_amortized
         }
         models = create_models(models_config)
         b_net = models["b_net"]
