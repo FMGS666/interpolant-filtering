@@ -22,15 +22,6 @@ SCHEDULERS = {
     "none": None
 }
 
-OBSERVATION_MODELS = {
-    "gaussian": GaussianObservationModel
-}
-
-def configure_observation_model(observation_model_class, args):
-    if observation_model_class == "gaussian":
-        observation_model_config = {"sigma_y": args["sigma_y"]}
-    return observation_model_config
-
 if __name__ == "__main__":
     ## parsing arguments
     args = configuration()
@@ -54,11 +45,6 @@ if __name__ == "__main__":
     ## reproducibility
     random_seed = args["random_seed"]
     ensure_reproducibility(random_seed)
-    
-    ## initilizing observation model
-    observation_model_class = args["observation_model"]
-    observation_model_config = configure_observation_model(observation_model_class, args)
-    observation_model = OBSERVATION_MODELS[observation_model_class](observation_model_config)
 
     ## creating experiment
     experiment = create_experiment(args)
