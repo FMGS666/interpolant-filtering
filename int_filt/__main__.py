@@ -7,7 +7,6 @@ from .experiments import create_experiment
 
 from .utils.config import configuration
 from .utils.utils import ensure_reproducibility
-from .utils.distributions import GaussianObservationModel
 
 ACTIVATIONS = {
     "relu": torch.nn.ReLU()

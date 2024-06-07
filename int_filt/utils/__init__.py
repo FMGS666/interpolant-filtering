@@ -11,8 +11,3 @@ from .utils import (
     safe_broadcast,
     safe_cat 
 )
-
-from .distributions import (
-    ObservationModel,
-    GaussianObservationModel
-)
