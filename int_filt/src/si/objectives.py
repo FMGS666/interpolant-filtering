@@ -31,7 +31,7 @@ class DriftObjective(torch.nn.Module):
 
     def forward(self, batch: InputData) -> OutputData:
         """
-        Returns the MC estimate of the objecting function
+        Returns the MC estimate of the objective function
         """
         ## parsing batch dictionary
         x0 = batch["x0"]

@@ -28,7 +28,7 @@ def create_models(config: ConfigData) -> ModelData:
             "activate_final": b_net_activate_final,
         }
         b_backbone = MLP(b_backbone_config)
-        ## initializing $b$ and $c$ models
+        ## initializing $b$ model
         b_net_config = {"backbone": b_backbone, "amortized": b_net_amortized}
         b_net = B_Net(b_net_config)
     models = {"b_net": b_net}
