@@ -33,6 +33,8 @@ def create_experiment(config: ConfigData) -> Experiment:
         ## logging 
         log_dir = config["log_dir"]
         writer = SummaryWriter(log_dir=os.path.join(log_dir, 'summary'))
+        ## device
+        device = config["device"]
         ## initializing ou-model 
         ssm_config = {
             "sigma_x": sigma_x,
@@ -52,7 +54,8 @@ def create_experiment(config: ConfigData) -> Experiment:
             "b_net_hidden_dims": b_net_hidden_dims,
             "b_net_activation": b_net_activation,
             "b_net_activate_final": b_net_activate_final,
-            "b_net_amortized": b_net_amortized
+            "b_net_amortized": b_net_amortized,
+            "device": device
         }
         models = create_models(models_config)
         b_net = models["b_net"]
@@ -62,7 +65,8 @@ def create_experiment(config: ConfigData) -> Experiment:
             "b_net": b_net, 
             "ssm": ssm,
             "writer": writer,
-            "mc_config": mc_config
+            "mc_config": mc_config,
+            "device": device
         }
         experiment = OUExperiment(experiment_config)
     return experiment

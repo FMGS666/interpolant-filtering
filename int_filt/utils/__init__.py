@@ -9,5 +9,6 @@ from .utils import (
     construct_time_discretization, 
     ensure_reproducibility, 
     safe_broadcast,
-    safe_cat 
+    safe_cat,
+    move_batch_to_device
 )

@@ -113,3 +113,11 @@ def safe_cat(batch, cat_keys, to_broadcast = [], dim = -1, unsqueeze_last_dim = 
     ## now we can perform concatenation 
     xcat = torch.cat(to_cat, dim = dim)
     return xcat
+
+## function for moving batch of tensors to device
+def move_batch_to_device(batch, device):
+    batch_copy = dict()
+    for key, tensor in batch.items():
+        tensor = tensor.to(device)
+        batch_copy[key] = tensor
+    return batch_copy

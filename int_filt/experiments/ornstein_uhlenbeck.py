@@ -7,7 +7,7 @@ from .common import Experiment
 
 from ..src import DriftObjective
 
-from ..utils import ConfigData, OutputData
+from ..utils import ConfigData, OutputData, move_batch_to_device
 
 class OUExperiment(Experiment):
     """
@@ -24,6 +24,7 @@ class OUExperiment(Experiment):
         self.ssm = self.config["ssm"]
         self.writer = self.config["writer"]
         self.mc_config = self.config["mc_config"]
+        self.device = self.config["device"]
         self.logging_step = 5
     
     def train(self, optim_config: ConfigData) -> OutputData:
@@ -53,6 +54,7 @@ class OUExperiment(Experiment):
             y = self.ssm.observation().float()
             ## constructing batch
             batch = {"x0": x0, "x1": x1, "xc": xc, "y": y}
+            batch = move_batch_to_device(batch, self.device)
             ## estimating loss
             loss = Lb.forward(batch)
             loss_value = loss.item()

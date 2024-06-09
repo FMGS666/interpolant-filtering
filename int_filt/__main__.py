@@ -21,11 +21,18 @@ SCHEDULERS = {
     "none": None
 }
 
+DEVICES = {
+    "cpu": torch.device("cpu"),
+    "cuda": torch.device("cuda")
+}
+
 if __name__ == "__main__":
     ## parsing arguments
     args = configuration()
     ## retrieving activations
     args.b_net_activation = ACTIVATIONS[args.b_net_activation]
+    ## retrieving device
+    args.device = DEVICES[args.device]
     ## creating experiment
     args = vars(args)
     ## adding mc configuration

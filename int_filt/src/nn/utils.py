@@ -17,6 +17,7 @@ def create_models(config: ConfigData) -> ModelData:
         b_net_activation = config["b_net_activation"]
         b_net_activate_final = config["b_net_activate_final"]
         b_net_amortized = config["b_net_amortized"]
+        device = config["device"]
         ## defining inputs dims
         input_dims = spatial_dims*3 + 1 if b_net_amortized else spatial_dims*2 + 1
         ## initializing $b$ backbone
@@ -31,5 +32,6 @@ def create_models(config: ConfigData) -> ModelData:
         ## initializing $b$ model
         b_net_config = {"backbone": b_backbone, "amortized": b_net_amortized}
         b_net = B_Net(b_net_config)
+        b_net.to(device)
     models = {"b_net": b_net}
     return models

@@ -52,6 +52,9 @@ def configuration(args = None):
     ## reproducibility options
     reproducibility_group = parser.add_argument_group("Reproducibility Options")
     reproducibility_group.add_argument("--random-seed", "-rs", default = 128, type = int, help = "The random seed for the experiment")
+    ## device options
+    device_group = parser.add_argument_group("Device Options")
+    device_group.add_argument("--device", "-d", default = "cuda", help = "The device to run the computation on")
     if args is None:
         return parser.parse_args()
     else:
