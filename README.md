@@ -19,6 +19,11 @@ $ conda env create -f environment.yml
 $ conda activate interpolant-filtering
 ```
 
+To update the requirements of the package, run
+```{bash}
+conda env export --no-builds | grep -v "prefix" > environment.yml
+```
+
 It is possible to run the OU experiment with default settings with the command:
 
 ```{bash}
