@@ -5,7 +5,7 @@ import torch
 
 from typing import Optional
 
-from ..utils import ConfigData, OutputData
+from ..utils import ConfigData, InputData, OutputData
 
 class Experiment:
     def __init__(self, config: ConfigData) -> None:
@@ -20,7 +20,13 @@ class Experiment:
         Samples a batch from the ssm
         """
         raise NotImplementedError
-    
+
+    def standardize(self, batch: InputData) -> OutputData:
+        """
+        standardizes a batch of data
+        """
+        raise NotImplementedError
+
     def train(self, optim_config: Optional[ConfigData] = None) -> OutputData:
         """
         Trains the $b$ model

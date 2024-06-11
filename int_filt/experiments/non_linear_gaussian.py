@@ -47,6 +47,16 @@ class NLGExperiment(Experiment):
         batch = {"x0": x0.float(), "x1": x1.float(), "xc": xc.float(), "y": y.float()}
         return batch
 
+    def standardize(self, batch: InputData) -> OutputData:
+        """
+        standardizes a batch of data
+        """
+        ## defining keys for hidden states
+        
+        batch_copy = dict()
+        for key, tensor in batch.items():
+            ...
+
     def train(self, optim_config: ConfigData) -> OutputData:
         """
         Trains the $b$ model
@@ -66,8 +76,9 @@ class NLGExperiment(Experiment):
         loss_history = torch.zeros((num_grad_steps))
         ## starting optimization
         for grad_step in range(num_grad_steps):
-            ## sampling from ssm
+            ## preparingg batch
             batch = self.get_batch()
+            batch = self.standardize(batch)
             batch = move_batch_to_device(batch, self.device)
             ## estimating loss
             loss = Lb.forward(batch)

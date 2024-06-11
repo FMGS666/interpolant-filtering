@@ -41,6 +41,30 @@ class OUExperiment(Experiment):
         batch = {"x0": x0, "x1": x1, "xc": xc, "y": y}
         return batch
 
+    def standardize(self, batch: InputData) -> OutputData:
+        """
+        standardizes a batch of data
+        """
+        ## defining keys for latent states
+        latent_state_keys = ["x0", "x1", "xc"]
+        observation_keys = ["y"]
+        ## retrieving necessary data
+        sigma_x = self.ssm.sigma_x
+        sigma_y = self.ssm.sigma_y
+        beta = self.ssm.beta
+        ## normalizing batch
+        batch_copy = dict()
+        for key, tensor in batch.items():
+            ## computing target std
+            if key in latent_state_keys:
+                std = (sigma_x / torch.sqrt(2.0 * beta)) * torch.ones_like(tensor)
+            elif key in observation_keys:
+                std = torch.sqrt(sigma_x**2 / (2.0 * beta) + var_y) * torch.ones_like(tensor)
+            ## scaling tensor
+            tensor = tensor / std
+            batch_copy[key] = tensor
+        return batch_copy
+
     def train(self, optim_config: ConfigData) -> OutputData:
         """
         Trains the $b$ model
@@ -60,7 +84,9 @@ class OUExperiment(Experiment):
         loss_history = torch.zeros((num_grad_steps))
         ## starting optimization
         for grad_step in range(num_grad_steps):
+            ## preparing batch
             batch = self.get_batch()
+            batch = self.standardize(batch)
             batch = move_batch_to_device(batch, self.device)
             ## estimating loss
             loss = Lb.forward(batch)

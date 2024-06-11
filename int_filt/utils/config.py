@@ -48,10 +48,10 @@ def configuration(args = None):
                         help='Where to store the saved models.')
     ## b-net training options
     train_b_net_group = parser.add_argument_group("BNet Training Options")
-    train_b_net_group.add_argument("--b-net-num-grad-steps", "-bngs", default = 500, type = int, help = "The number of gradient steps to be taken during the training of the $b$ model")
-    train_b_net_group.add_argument("--b-net-optimizer", "-bopt", default = "adam", help = "The optimizer used for training the $b$ model")
+    train_b_net_group.add_argument("--b-net-num-grad-steps", "-bngs", default = 250, type = int, help = "The number of gradient steps to be taken during the training of the $b$ model")
+    train_b_net_group.add_argument("--b-net-optimizer", "-bopt", default = "adam-w", help = "The optimizer used for training the $b$ model")
     train_b_net_group.add_argument("--b-net-scheduler", "-bsched", default = "none", help = "The learning rate scheduler for training the $b$ model")
-    train_b_net_group.add_argument("--b-net-lr", "-blr", default = 0.01, type = float, help = "The initial learning rate used for training the $b$ model")
+    train_b_net_group.add_argument("--b-net-lr", "-blr", default = 0.001, type = float, help = "The initial learning rate used for training the $b$ model")
     ## reproducibility options
     reproducibility_group = parser.add_argument_group("Reproducibility Options")
     reproducibility_group.add_argument("--random-seed", "-rs", default = 128, type = int, help = "The random seed for the experiment")

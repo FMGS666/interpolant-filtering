@@ -16,6 +16,8 @@ from ..src import (
     SimOrnsteinUhlenbeck, 
     SimNLGCos, 
     SimNLGSin, 
+    SimNLGTan,
+    SimNLGTanh,
     SimNLGExp,
 )
 
@@ -24,6 +26,8 @@ from ..utils import ConfigData
 NON_LINEARITIES = {
     "cos": SimNLGCos,
     "sin": SimNLGSin,
+    "tan": SimNLGTan,
+    "tanh": SimNLGTanh,
     "exp": SimNLGExp,
 }
 
