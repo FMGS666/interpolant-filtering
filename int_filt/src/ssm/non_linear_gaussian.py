@@ -5,7 +5,6 @@ import torch
 
 import numpy as np
 
-from torch.nn.functional import tanh, sigmoid
 from typing import Optional
 from tqdm import tqdm
 
@@ -15,11 +14,6 @@ from ...utils import ConfigData, InputData, OutputData
 
 
 class SimNonLinearGaussian(SimSSM):
-    ## considered non-linearities
-    NON_LINEARITIES = {
-        "tanh": tanh,
-        "sigmoid": sigmoid
-    }
     """
     Class implementing a non-linear gaussian state transition
     with gaussian observation model
@@ -35,11 +29,7 @@ class SimNonLinearGaussian(SimSSM):
         self.num_iters = config["num_iters"]
         self.sigma_x = config["sigma_x"]
         self.sigma_y = config["sigma_y"]
-        self.non_linearity = config["non_linearity"]
-        ## getting non linearity function
-        self.non_linearity_fn = self.NON_LINEARITIES[self.non_linearity]
-        ## running the simulations
-        self.sim = self.simulate()
+        self.step_size = config["step_size"]
     
     def initial_state(self) -> OutputData:
         """
@@ -53,7 +43,7 @@ class SimNonLinearGaussian(SimSSM):
         Samples from the model's state transition
         """
         ## applying non-linearity
-        x = self.non_linearity_fn(x)
+        x = self.non_linearity(x)
         ## sampling perturbation
         z = torch.randn_like(x)
         return x + self.sigma_x*z
@@ -90,3 +80,66 @@ class SimNonLinearGaussian(SimSSM):
         ## defining simulation dictionary
         sim = {"latent_states": latent_states_store, "observations": observation_store}
         return sim
+
+class SimNLGCos(SimNonLinearGaussian):
+    """
+    Class implementing a non-linear gaussian state transition
+    with gaussian observation model
+    """
+    def __init__(self, config: ConfigData) -> None:
+        """
+        Constructor with custom config dictionary
+        """
+        super(SimNLGCos, self).__init__(config)
+        ## running the simulations
+        self.sim = self.simulate()
+
+    def non_linearity(self, x: InputData) -> OutputData:
+        r"""
+        Computes the non-linear update
+        $f(x) = x - \delta_t \operatorname{cos}(x)$
+        """
+        update = torch.cos(x)
+        return x + self.step_size*update
+
+class SimNLGSin(SimNonLinearGaussian):
+    """
+    Class implementing a non-linear gaussian state transition
+    with gaussian observation model
+    """
+    def __init__(self, config: ConfigData) -> None:
+        """
+        Constructor with custom config dictionary
+        """
+        super(SimNLGSin, self).__init__(config)
+        ## running the simulations
+        self.sim = self.simulate()
+
+    def non_linearity(self, x: InputData) -> OutputData:
+        r"""
+        Computes the non-linear update
+        $f(x) = x - \delta_t \operatorname{exp} \{x\}$
+        """
+        update = torch.sin(x)
+        return x + self.step_size*update
+
+class SimNLGExp(SimNonLinearGaussian):
+    """
+    Class implementing a non-linear gaussian state transition
+    with gaussian observation model
+    """
+    def __init__(self, config: ConfigData) -> None:
+        """
+        Constructor with custom config dictionary
+        """
+        super(SimNLGExp, self).__init__(config)
+        ## running the simulations
+        self.sim = self.simulate()
+
+    def non_linearity(self, x: InputData) -> OutputData:
+        r"""
+        Computes the non-linear update
+        $f(x) = x - \delta_t \operatorname{exp} \{x\}$
+        """
+        update = torch.exp(-x)
+        return x + self.step_size*update

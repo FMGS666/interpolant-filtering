@@ -10,11 +10,25 @@ from .common import Experiment
 from .ornstein_uhlenbeck import OUExperiment
 from .non_linear_gaussian import NLGExperiment
 
-from ..src import create_interpolant, create_models, SimOrnsteinUhlenbeck, SimNonLinearGaussian
+from ..src import (
+    create_interpolant, 
+    create_models, 
+    SimOrnsteinUhlenbeck, 
+    SimNLGCos, 
+    SimNLGSin, 
+    SimNLGExp,
+)
+
 from ..utils import ConfigData
 
+NON_LINEARITIES = {
+    "cos": SimNLGCos,
+    "sin": SimNLGSin,
+    "exp": SimNLGExp,
+}
+
 def create_experiment(config: ConfigData) -> Experiment:
-    if config["experiment"] == "ornstein-uhlenbeck":
+    if config["experiment"] == "ou":
         ## parsing configuration dictionary
         ## model
         sigma_x = config["sigma_x"]
@@ -70,7 +84,7 @@ def create_experiment(config: ConfigData) -> Experiment:
             "device": device
         }
         experiment = OUExperiment(experiment_config)
-    if config["experiment"] == "non-linear-gaussian":
+    if config["experiment"] == "nlg":
         ## parsing configuration dictionary
         ## model
         sigma_x = config["sigma_x"]
@@ -78,6 +92,7 @@ def create_experiment(config: ConfigData) -> Experiment:
         num_dims = config["num_dims"]
         num_sims = config["num_sims"]
         num_iters = config["num_iters"]
+        step_size = config["step_size"]
         non_linearity = config["non_linearity"]
         ## interpolant
         interpolant_method = config["interpolant_method"]
@@ -100,9 +115,9 @@ def create_experiment(config: ConfigData) -> Experiment:
             "num_dims": num_dims,
             "num_sims": num_sims,
             "num_iters": num_iters,
-            "non_linearity": non_linearity
+            "step_size": step_size
         }
-        ssm = SimNonLinearGaussian(ssm_config)
+        ssm = NON_LINEARITIES[non_linearity](ssm_config)
         ## initializing interpolant
         interpolant_config = {"method": interpolant_method}
         interpolant = create_interpolant(interpolant_config)
