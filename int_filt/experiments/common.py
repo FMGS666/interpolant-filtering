@@ -14,6 +14,12 @@ class Experiment:
         """
         ## initializing attributes
         self.config = config
+
+    def get_batch(self) -> OutputData:
+        """
+        Samples a batch from the ssm
+        """
+        raise NotImplementedError
     
     def train(self, optim_config: Optional[ConfigData] = None) -> OutputData:
         """

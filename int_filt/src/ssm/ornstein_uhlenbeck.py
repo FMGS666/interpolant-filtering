@@ -1,5 +1,5 @@
 """
-File containing the implementation of pendulum state OU model
+File containing the implementation of OU model
 """
 import torch
 
@@ -23,8 +23,6 @@ class SimOrnsteinUhlenbeck(SimSSM):
         Constructor with custom config dictionary
         """
         super(SimOrnsteinUhlenbeck, self).__init__(config)
-        ## initializing attributes
-        self.config = config
         ## parsing configuration dictionary
         self.num_sims = config["num_sims"]
         self.num_dims = config["num_dims"]

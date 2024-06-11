@@ -30,13 +30,15 @@ def configuration(args = None):
     ## experiment options
     experiment_group = parser.add_argument_group("Experiment Options")
     experiment_group.add_argument("--experiment", "-exp", default = "ornstein-uhlenbeck", help = "The experiment to be ran")
-    ## ou experiment options
-    ou_group = parser.add_argument_group("Ornstein Uhlenbeck Experiment Options")
+    ## ssm experiment options
+    ou_group = parser.add_argument_group("SSM Options")
     ou_group.add_argument("--sigma-x", "-sx", default = 1.0, type = float, help = "The standard deviation of the latent states for the OU model")
     ou_group.add_argument("--sigma-y", "-sy", default = 1.0, type = float, help = "The standard deviation of the observation model")
     ou_group.add_argument("--beta", "-b", default = 1.0, type = float, help = "Multiplier for the standard deviation of the latent states")
     ou_group.add_argument("--num-dims", "-nd", default = 2, type = int, help = "The dimensionality of the space")
     ou_group.add_argument("--num-sims", "-nsm", default = 10000, type = int, help = "The number of simulations to be ran in each batch")
+    ou_group.add_argument("--num-iters", "-nit", default = 20000, type = int, help = "The number of iterations to run each simulation for")
+    ou_group.add_argument("--non-linearity", "-nl", default = "tanh", help = "The non-linearity to apply for the gaussian model")
     ## logging options
     logging_group = parser.add_argument_group("Logging Options")
     logging_group.add_argument('--log_dir', type=str, default = out_dir,

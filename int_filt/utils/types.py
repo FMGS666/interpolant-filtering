@@ -9,7 +9,7 @@ import numpy as np
 from typing import Union
 
 ## defining configuration data type
-ConfigDataTypes = Union[str, torch.Tensor, float, int, list[int], bool]
+ConfigDataTypes = Union[str, torch.Tensor, torch.nn.Module, float, int, list[int], bool]
 ConfigData = dict[str, ConfigDataTypes]
 
 ## defining custom input/output data types

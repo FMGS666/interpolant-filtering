@@ -39,7 +39,7 @@ class SimSSM(torch.nn.Module):
         """
         raise NotImplementedError
     
-    def run(self) -> OutputData:
+    def simulate(self) -> OutputData:
         """
         Runs the simulation
         """
