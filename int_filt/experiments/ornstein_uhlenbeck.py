@@ -27,6 +27,20 @@ class OUExperiment(Experiment):
         self.device = self.config["device"]
         self.logging_step = 5
     
+    def get_batch(self) -> OutputData:
+        """
+        Samples a batch from the ssm
+        """
+        ## sampling from stationary state distribution
+        x0 = self.ssm.initial_state().float()
+        x1 = self.ssm.initial_state().float()
+        xc = x0.float()
+        ## sampling from observation model
+        y = self.ssm.observation().float()
+        ## constructing batch
+        batch = {"x0": x0, "x1": x1, "xc": xc, "y": y}
+        return batch
+
     def train(self, optim_config: ConfigData) -> OutputData:
         """
         Trains the $b$ model
@@ -46,14 +60,7 @@ class OUExperiment(Experiment):
         loss_history = torch.zeros((num_grad_steps))
         ## starting optimization
         for grad_step in range(num_grad_steps):
-            ## sampling from stationary state distribution
-            x0 = self.ssm.initial_state().float()
-            x1 = self.ssm.initial_state().float()
-            xc = x0.float()
-            ## sampling from observation model
-            y = self.ssm.observation().float()
-            ## constructing batch
-            batch = {"x0": x0, "x1": x1, "xc": xc, "y": y}
+            batch = self.get_batch()
             batch = move_batch_to_device(batch, self.device)
             ## estimating loss
             loss = Lb.forward(batch)
