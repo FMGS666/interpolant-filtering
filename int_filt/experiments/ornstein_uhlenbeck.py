@@ -82,6 +82,8 @@ class OUExperiment(Experiment):
         Lb = DriftObjective(Lb_config)
         ## defining store loss
         loss_history = torch.zeros((num_grad_steps))
+        ## defining iterator
+        iterator = tqdm(range(num_grad_steps))
         ## starting optimization
         for grad_step in range(num_grad_steps):
             ## preparing batch
@@ -98,7 +100,8 @@ class OUExperiment(Experiment):
             ## storing loss
             loss_history[grad_step] = loss_value
             ## logging
+            iterator.set_description(f"Grad Step {grad_step + 1}/{num_grad_steps}, MSELoss: {loss_value}")
+            iterator.update()
             if grad_step % self.logging_step == 0:
                 self.writer.add_scalar("train/drift_loss", loss_value, grad_step)
-                print(f"Grad step: {grad_step}, Velocity Field MSE Loss: {loss_value}", flush = True)
         return loss_history

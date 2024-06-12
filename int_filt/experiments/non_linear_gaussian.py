@@ -5,6 +5,8 @@ import torch
 
 import numpy as np
 
+from tqdm import tqdm
+
 from .common import Experiment
 
 from ..src import DriftObjective
@@ -28,6 +30,12 @@ class NLGExperiment(Experiment):
         self.mc_config = self.config["mc_config"]
         self.device = self.config["device"]
         self.logging_step = 5
+        ## computing standardization mean over 
+        ## time and simulation dimensions
+        latent_states = self.ssm.sim["latent_states"]
+        observations = self.ssm.sim["observations"]
+        self.mean_x = torch.mean(latent_states, dim = 0)
+        self.mean_y = torch.mean(observations, dim = 0)
     
     def get_batch(self) -> OutputData:
         """
@@ -64,13 +72,15 @@ class NLGExperiment(Experiment):
         for key, tensor in batch.items():
             ## computing target std
             if key in latent_state_keys:
-                mean = torch.mean(tensor, dim = 0, keepdim = True)
-                std = sigma_x * torch.ones_like(tensor)
+                mean = self.mean_x
+                #std = sigma_x * torch.ones_like(tensor)
             elif key in observation_keys:
-                mean = torch.mean(tensor, dim = 0, keepdim = True)
-                std = np.sqrt(sigma_x**2  + sigma_y**2) * torch.ones_like(tensor)
+                mean = self.mean_y
+                #std = np.sqrt(sigma_x**2  + sigma_y**2) * torch.ones_like(tensor)
+            std = torch.mean(tensor)
             ## scaling tensor
-            tensor = (tensor - mean) / std
+            #tensor = (tensor - mean) / std
+            tensor = (tensor - mean) 
             batch_copy[key] = tensor
         return batch_copy
 
@@ -91,11 +101,13 @@ class NLGExperiment(Experiment):
         Lb = DriftObjective(Lb_config)
         ## defining store loss
         loss_history = torch.zeros((num_grad_steps))
+        ## defining iterator
+        iterator = tqdm(range(num_grad_steps))
         ## starting optimization
         for grad_step in range(num_grad_steps):
             ## preparingg batch
             batch = self.get_batch()
-            #batch = self.standardize(batch)
+            batch = self.standardize(batch)
             batch = move_batch_to_device(batch, self.device)
             ## estimating loss
             loss = Lb.forward(batch)
@@ -107,7 +119,8 @@ class NLGExperiment(Experiment):
             ## storing loss
             loss_history[grad_step] = loss_value
             ## logging
+            iterator.set_description(f"Grad Step {grad_step + 1}/{num_grad_steps}, MSELoss: {loss_value}")
+            iterator.update()
             if grad_step % self.logging_step == 0:
                 self.writer.add_scalar("train/drift_loss", loss_value, grad_step)
-                print(f"Grad step: {grad_step}, Velocity Field MSE Loss: {loss_value}", flush = True)
         return loss_history
