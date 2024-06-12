@@ -3,11 +3,13 @@ Script for running the experiment on the Ornstein-Uhlenbeck model
 """
 import torch
 
+import numpy as np
+
 from .common import Experiment
 
 from ..src import DriftObjective
 
-from ..utils import ConfigData, OutputData, move_batch_to_device
+from ..utils import ConfigData, InputData, OutputData, move_batch_to_device
 
 class NLGExperiment(Experiment):
     """
@@ -51,11 +53,26 @@ class NLGExperiment(Experiment):
         """
         standardizes a batch of data
         """
-        ## defining keys for hidden states
-        
+        ## defining keys for latent states
+        latent_state_keys = ["x0", "x1", "xc"]
+        observation_keys = ["y"]
+        ## retrieving necessary data
+        sigma_x = self.ssm.sigma_x
+        sigma_y = self.ssm.sigma_y
+        ## normalizing batch
         batch_copy = dict()
         for key, tensor in batch.items():
-            ...
+            ## computing target std
+            if key in latent_state_keys:
+                mean = torch.mean(tensor, dim = 0, keepdim = True)
+                std = sigma_x * torch.ones_like(tensor)
+            elif key in observation_keys:
+                mean = torch.mean(tensor, dim = 0, keepdim = True)
+                std = np.sqrt(sigma_x**2  + sigma_y**2) * torch.ones_like(tensor)
+            ## scaling tensor
+            tensor = (tensor - mean) / std
+            batch_copy[key] = tensor
+        return batch_copy
 
     def train(self, optim_config: ConfigData) -> OutputData:
         """
@@ -78,7 +95,7 @@ class NLGExperiment(Experiment):
         for grad_step in range(num_grad_steps):
             ## preparingg batch
             batch = self.get_batch()
-            batch = self.standardize(batch)
+            #batch = self.standardize(batch)
             batch = move_batch_to_device(batch, self.device)
             ## estimating loss
             loss = Lb.forward(batch)

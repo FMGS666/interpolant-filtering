@@ -7,7 +7,7 @@ from .common import Experiment
 
 from ..src import DriftObjective
 
-from ..utils import ConfigData, OutputData, move_batch_to_device
+from ..utils import ConfigData, InputData, OutputData, move_batch_to_device
 
 class OUExperiment(Experiment):
     """
@@ -57,9 +57,9 @@ class OUExperiment(Experiment):
         for key, tensor in batch.items():
             ## computing target std
             if key in latent_state_keys:
-                std = (sigma_x / torch.sqrt(2.0 * beta)) * torch.ones_like(tensor)
+                std = (sigma_x / np.sqrt(2.0*beta)) * torch.ones_like(tensor)
             elif key in observation_keys:
-                std = torch.sqrt(sigma_x**2 / (2.0 * beta) + var_y) * torch.ones_like(tensor)
+                std = np.sqrt(sigma_x**2 / (2.0 * beta) + sigma_y**2) * torch.ones_like(tensor)
             ## scaling tensor
             tensor = tensor / std
             batch_copy[key] = tensor
