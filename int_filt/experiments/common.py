@@ -33,6 +33,18 @@ class Experiment:
         """
         raise NotImplementedError
 
+    def simulate_sde(self, batch: InputData, sample_config: Optional[ConfigData] = None) -> OutputData:
+        r"""
+        Simulates the SDE $dX_t = b(t, X_t)dt + \sigma_tdB_t$
+        """
+        raise NotImplementedError
+
+    def sample(self, batch: InputData, sample_config: Optional[ConfigData] = None) -> OutputData:
+        r"""
+        Samples  from the model by simulating the SDE $dX_t = b(t, X_t)dt + \sigma_tdB_t$
+        """
+        raise NotImplementedError
+
     def FA_APF(self, filter_conf: Optional[ConfigData] = None) -> OutputData:
         """
         Runs Fully Augmented Auxiliary Particle Filter

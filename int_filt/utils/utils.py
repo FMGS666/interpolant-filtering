@@ -7,9 +7,9 @@ import random
 import numpy as np
 
 ## defining function time discretization
-def construct_time_discretization(N, device):    
-    time = torch.linspace(0.0, 1.0, N + 1, device = device)
-    stepsizes = (1.0 / N) * torch.ones(N, device = device)
+def construct_time_discretization(N, device, lbound = 0.0, ubound = 1.0):    
+    time = torch.linspace(lbound, ubound, N + 1, device = device)
+    stepsizes = ((ubound - lbound) / N) * torch.ones(N, device = device)
     return (time, stepsizes)
 
 ## defining function for reproducibility

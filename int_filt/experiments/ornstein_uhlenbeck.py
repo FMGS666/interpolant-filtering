@@ -48,6 +48,7 @@ class OUExperiment(Experiment):
         ## defining keys for latent states
         latent_state_keys = ["x0", "x1", "xc"]
         observation_keys = ["y"]
+        skip_keys = ["t"]
         ## retrieving necessary data
         sigma_x = self.ssm.sigma_x
         sigma_y = self.ssm.sigma_y
@@ -60,6 +61,8 @@ class OUExperiment(Experiment):
                 std = (sigma_x / np.sqrt(2.0*beta)) * torch.ones_like(tensor)
             elif key in observation_keys:
                 std = np.sqrt(sigma_x**2 / (2.0 * beta) + sigma_y**2) * torch.ones_like(tensor)
+            elif key in skip_keys:
+                continue
             ## scaling tensor
             tensor = tensor / std
             batch_copy[key] = tensor
@@ -77,7 +80,8 @@ class OUExperiment(Experiment):
         Lb_config = {
             "b_net": self.b_net, 
             "interpolant": self.interpolant, 
-            "mc_config": self.mc_config
+            "mc_config": self.mc_config,
+            "preprocess_batch": self.standardize
         }
         Lb = DriftObjective(Lb_config)
         ## defining store loss
@@ -88,7 +92,7 @@ class OUExperiment(Experiment):
         for grad_step in range(num_grad_steps):
             ## preparing batch
             batch = self.get_batch()
-            batch = self.standardize(batch)
+            #batch = self.standardize(batch)
             batch = move_batch_to_device(batch, self.device)
             ## estimating loss
             loss = Lb.forward(batch)
