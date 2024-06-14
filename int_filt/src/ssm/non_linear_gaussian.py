@@ -28,6 +28,7 @@ class SimNonLinearGaussian(SimSSM):
         self.num_iters = config["num_iters"]
         self.sigma_x = config["sigma_x"]
         self.sigma_y = config["sigma_y"]
+        self.beta = config["beta"]
         self.step_size = config["step_size"]
     
     def initial_state(self) -> OutputData:
@@ -105,7 +106,7 @@ class SimNLGCos(SimNonLinearGaussian):
         Computes the non-linear update
         $f(x) = x - \delta_t \operatorname{cos}(x)$
         """
-        update = torch.cos(x)
+        update = torch.cos(self.beta*x)
         return x + self.step_size*update
 
 class SimNLGSin(SimNonLinearGaussian):
@@ -126,7 +127,7 @@ class SimNLGSin(SimNonLinearGaussian):
         Computes the non-linear update
         $f(x) = x - \delta_t \operatorname{exp} \{x\}$
         """
-        update = torch.sin(x)
+        update = torch.sin(self.beta*x)
         return x + self.step_size*update
 
 class SimNLGTan(SimNonLinearGaussian):
@@ -147,7 +148,7 @@ class SimNLGTan(SimNonLinearGaussian):
         Computes the non-linear update
         $f(x) = x - \delta_t \operatorname{exp} \{x\}$
         """
-        update = torch.tan(x)
+        update = torch.tan(self.beta*x)
         return x + self.step_size*update
 
 ##############################################################################################################
@@ -175,7 +176,7 @@ class SimNLGTanh(SimNonLinearGaussian):
         Computes the non-linear update
         $f(x) = x - \delta_t \operatorname{exp} \{x\}$
         """
-        update = torch.tanh(x)
+        update = torch.tanh(self.beta*x)
         return x + self.step_size*update
 
 ##############################################################################################################
@@ -203,5 +204,5 @@ class SimNLGExp(SimNonLinearGaussian):
         Computes the non-linear update
         $f(x) = x - \delta_t \operatorname{exp} \{x\}$
         """
-        update = torch.exp(-x)
+        update = torch.exp(-self.beta*x)
         return x + self.step_size*update

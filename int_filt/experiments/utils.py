@@ -110,6 +110,7 @@ def create_experiment(config: ConfigData) -> Experiment:
         ## model
         sigma_x = config["sigma_x"]
         sigma_y = config["sigma_y"]
+        beta = config["beta"]
         num_dims = config["num_dims"]
         num_sims = config["num_sims"]
         num_iters = config["num_iters"]
@@ -135,6 +136,7 @@ def create_experiment(config: ConfigData) -> Experiment:
         ssm_config = {
             "sigma_x": sigma_x,
             "sigma_y": sigma_y,
+            "beta": beta,
             "num_dims": num_dims,
             "num_sims": num_sims,
             "num_iters": num_iters,
