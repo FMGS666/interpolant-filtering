@@ -121,3 +121,13 @@ def move_batch_to_device(batch, device):
         tensor = tensor.to(device)
         batch_copy[key] = tensor
     return batch_copy
+
+## Standardizes a tensor with the given mean and standard deviation
+def standardize(tensor, mean, std):
+    ## handling device
+    device = tensor.device
+    mean = mean.to(device)
+    std = std.to(device)
+    ## scaling tensor
+    tensor = (tensor - mean) / std
+    return tensor

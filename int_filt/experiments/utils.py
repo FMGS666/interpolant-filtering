@@ -19,6 +19,9 @@ from ..src import (
     SimNLGTan,
     SimNLGTanh,
     SimNLGExp,
+    IdentityPreproc,
+    StandardizeSimParamsPreproc,
+    StandardizeBatchParamsPreproc
 )
 
 from ..utils import ConfigData
@@ -29,6 +32,12 @@ NON_LINEARITIES = {
     "tan": SimNLGTan,
     "tanh": SimNLGTanh,
     "exp": SimNLGExp,
+}
+
+PREPROCESSING = {
+    "none": IdentityPreproc,
+    "sim": StandardizeSimParamsPreproc,
+    "batch": StandardizeBatchParamsPreproc, 
 }
 
 def create_experiment(config: ConfigData) -> Experiment:
@@ -54,6 +63,8 @@ def create_experiment(config: ConfigData) -> Experiment:
         writer = SummaryWriter(log_dir=os.path.join(log_dir, 'summary'))
         ## device
         device = config["device"]
+        ## preprocessing
+        preprocessing = config["preprocessing"]
         ## initializing ou-model 
         ssm_config = {
             "sigma_x": sigma_x,
@@ -78,6 +89,11 @@ def create_experiment(config: ConfigData) -> Experiment:
         }
         models = create_models(models_config)
         b_net = models["b_net"]
+        ## initializing preprocessing
+        preprocessing_config = {
+            "ssm": ssm
+        }
+        preprocessing = PREPROCESSING[preprocessing](preprocessing_config)
         ## initializing experiment
         experiment_config = {
             "interpolant": interpolant,
@@ -85,7 +101,8 @@ def create_experiment(config: ConfigData) -> Experiment:
             "ssm": ssm,
             "writer": writer,
             "mc_config": mc_config,
-            "device": device
+            "device": device,
+            "preprocessing": preprocessing
         }
         experiment = OUExperiment(experiment_config)
     if config["experiment"] == "nlg":
@@ -112,6 +129,8 @@ def create_experiment(config: ConfigData) -> Experiment:
         writer = SummaryWriter(log_dir=os.path.join(log_dir, 'summary'))
         ## device
         device = config["device"]
+        ## preprocessing
+        preprocessing = config["preprocessing"]
         ## initializing gaussian model 
         ssm_config = {
             "sigma_x": sigma_x,
@@ -137,6 +156,11 @@ def create_experiment(config: ConfigData) -> Experiment:
         }
         models = create_models(models_config)
         b_net = models["b_net"]
+        ## initializing preprocessing
+        preprocessing_config = {
+            "ssm": ssm
+        }
+        preprocessing = PREPROCESSING[preprocessing](preprocessing_config)
         ## initializing experiment
         experiment_config = {
             "interpolant": interpolant,
@@ -144,7 +168,8 @@ def create_experiment(config: ConfigData) -> Experiment:
             "ssm": ssm,
             "writer": writer,
             "mc_config": mc_config,
-            "device": device
+            "device": device,
+            "preprocessing": preprocessing
         }
         experiment = NLGExperiment(experiment_config)
     return experiment

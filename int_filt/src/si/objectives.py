@@ -28,7 +28,7 @@ class DriftObjective(torch.nn.Module):
         self.b_net = self.config["b_net"]
         self.interpolant = self.config["interpolant"]
         self.mc_config = self.config["mc_config"]
-        self.preprocess_batch = self.config["preprocess_batch"]
+        self.preprocessing = self.config["preprocessing"]
 
     def forward(self, batch: InputData) -> OutputData:
         """
@@ -64,7 +64,7 @@ class DriftObjective(torch.nn.Module):
             ## augmenting batch
             mc_batch["xt"] = xt
             ## preprocessing batch
-            mc_batch = self.preprocess_batch(mc_batch)
+            mc_batch = self.preprocessing(mc_batch)
             ## performing forward pass on the b_net
             bt = self.b_net(mc_batch)
             ## computing and storing loss

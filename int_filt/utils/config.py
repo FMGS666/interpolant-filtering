@@ -58,6 +58,9 @@ def configuration(args = None):
     ## device options
     device_group = parser.add_argument_group("Device Options")
     device_group.add_argument("--device", "-d", default = "cuda", help = "The device to run the computation on")
+    ## preprocessing options
+    preprocessing_group = parser.add_argument_group("Preprocessing Options")
+    device_group.add_argument("--preprocessing", "-pp", default = "none", help = "The preprocessing method to be used")
     if args is None:
         return parser.parse_args()
     else:

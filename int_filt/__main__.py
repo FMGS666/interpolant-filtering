@@ -54,9 +54,11 @@ if __name__ == "__main__":
 
     ## creating experiment
     experiment = create_experiment(args)
-
-    ## initializing optimizer
+    ## initializing optimizer and scheduler
     b_net_optimizer = OPTIMIZERS[b_net_optimizer](experiment.b_net.backbone.parameters(), lr = b_net_lr)
+    b_net_scheduler = SCHEDULERS[b_net_scheduler]
+    if b_net_scheduler is not None:
+        b_net_scheduler = b_net_scheduler(b_net_optimizer, b_net_num_grad_step)
 
     ## constructing optimization config dictionary
     b_net_optim_config = {
