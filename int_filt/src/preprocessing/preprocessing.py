@@ -79,32 +79,3 @@ class StandardizeSim(torch.nn.Module):
             ## copying tensor
             batch_copy[key] = tensor
         return batch_copy
-
-class StandardizeBatch(torch.nn.Module):
-    """
-    Class implementing the standardization with parameters inferred from the single batch
-    """
-    def __init__(self, config: ConfigData) -> None:
-        """
-        Constructor with custom config dictionary
-        """
-        super(StandardizeBatch, self).__init__()
-
-    def forward(self, batch: InputData) -> OutputData:
-        """
-        Performs preprocessing on a batch of data
-        """
-        ## defining keys for latent states and observations
-        latent_state_keys = ["x0", "x1", "xc", "xt"]
-        observation_keys = ["y"]
-        ## normalizing batch
-        batch_copy = dict()
-        for key, tensor in batch.items():
-            ## normalizing with appropriate params
-            if (key in latent_state_keys or key in observation_keys):
-                mean = torch.mean(tensor)
-                std = torch.std(tensor)
-                tensor = standardize(tensor, mean, std)
-            ## copying tensor
-            batch_copy[key] = tensor
-        return batch_copy

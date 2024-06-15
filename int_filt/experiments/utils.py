@@ -21,7 +21,6 @@ from ..src import (
     SimNLGExp,
     IdentityPreproc,
     StandardizeSim,
-    StandardizeBatch,
 )
 
 from ..utils import ConfigData
@@ -37,7 +36,6 @@ NON_LINEARITIES = {
 PREPROCESSING = {
     "none": IdentityPreproc,
     "sim": StandardizeSim,
-    "batch": StandardizeBatch,
 }
 
 def create_experiment(config: ConfigData) -> Experiment:

@@ -65,8 +65,6 @@ class DriftObjective(torch.nn.Module):
             rt = self.interpolant.velocity(mc_batch)
             ## augmenting batch
             mc_batch["xt"] = xt
-            ## preprocessing batch
-            #mc_batch = self.preprocessing(mc_batch)
             ## performing forward pass on the b_net
             bt = self.b_net(mc_batch)
             ## computing and storing loss
