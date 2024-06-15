@@ -22,9 +22,6 @@ from ..src import (
     IdentityPreproc,
     StandardizeSim,
     StandardizeBatch,
-    StandardizeFixedStdSimMean,
-    StandardizeHistory,
-    StandardizeFixedStdZeroMean
 )
 
 from ..utils import ConfigData
@@ -41,9 +38,6 @@ PREPROCESSING = {
     "none": IdentityPreproc,
     "sim": StandardizeSim,
     "batch": StandardizeBatch,
-    "fixed-std": StandardizeFixedStdSimMean,
-    "history": StandardizeHistory,
-    "fixed-std-zero-mean": StandardizeFixedStdZeroMean,
 }
 
 def create_experiment(config: ConfigData) -> Experiment:
