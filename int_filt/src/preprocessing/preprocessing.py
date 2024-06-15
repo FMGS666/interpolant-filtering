@@ -48,11 +48,11 @@ class StandardizeSim(torch.nn.Module):
         latent_states = self.ssm.sim["latent_states"]
         observations = self.ssm.sim["observations"]
         ## computing mean of latent states and observations
-        mean_x = torch.mean(latent_states)
-        mean_y = torch.mean(observations)
+        mean_x = torch.mean(latent_states, dim = 0)
+        mean_y = torch.mean(observations, dim = 0)
         ## computing std of latent states and observations
-        std_x = torch.std(latent_states)
-        std_y = torch.std(observations)
+        std_x = torch.std(latent_states, dim = 0)
+        std_y = torch.std(observations, dim = 0)
         ## constructing output dictionary
         params = {"mean_x": mean_x, "mean_y": mean_y, "std_x": std_x, "std_y": std_y}
         return params
