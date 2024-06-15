@@ -5,7 +5,7 @@ import torch
 
 from typing import Optional
 
-from ...utils import ConfigData, InputData, OutputData, standardize
+from ...utils import ConfigData, InputData, OutputData, standardize, unstandardize
 
 class IdentityPreproc(torch.nn.Module):
     """
@@ -19,21 +19,22 @@ class IdentityPreproc(torch.nn.Module):
         ## initializing attributes
         self.config = config
     
-    def forward(self, batch: InputData) -> OutputData:
+    def standardize(self, batch: InputData) -> OutputData:
         """
         Performs preprocessing on a batch of data
         """
         return batch
 
-class StandardizeSimParamsPreproc(torch.nn.Module):
+class StandardizeSim(torch.nn.Module):
     """
-    Class implementing the standardization with given parameters
+    Class implementing the standardization with parameters 
+    inferred from the whole history of all simulations
     """
     def __init__(self, config: ConfigData) -> None:
         """
         Constructor with custom config dictionary
         """
-        super(StandardizeSimParamsPreproc, self).__init__()
+        super(StandardizeSim, self).__init__()
         ## parsing configuration dictionary
         self.ssm = config["ssm"]
         ## computing params
@@ -49,7 +50,7 @@ class StandardizeSimParamsPreproc(torch.nn.Module):
         ## computing mean of latent states and observations
         mean_x = torch.mean(latent_states)
         mean_y = torch.mean(observations)
-        ## computing std of latent states and observation 
+        ## computing std of latent states and observations
         std_x = torch.std(latent_states)
         std_y = torch.std(observations)
         ## constructing output dictionary
@@ -79,15 +80,15 @@ class StandardizeSimParamsPreproc(torch.nn.Module):
             batch_copy[key] = tensor
         return batch_copy
 
-class StandardizeBatchParamsPreproc(torch.nn.Module):
+class StandardizeBatch(torch.nn.Module):
     """
-    Class implementing the standardization with given parameters
+    Class implementing the standardization with parameters inferred from the single batch
     """
     def __init__(self, config: ConfigData) -> None:
         """
         Constructor with custom config dictionary
         """
-        super(StandardizeBatchParamsPreproc, self).__init__()
+        super(StandardizeBatch, self).__init__()
 
     def forward(self, batch: InputData) -> OutputData:
         """
@@ -103,6 +104,170 @@ class StandardizeBatchParamsPreproc(torch.nn.Module):
             if (key in latent_state_keys or key in observation_keys):
                 mean = torch.mean(tensor)
                 std = torch.std(tensor)
+                tensor = standardize(tensor, mean, std)
+            ## copying tensor
+            batch_copy[key] = tensor
+        return batch_copy
+
+class StandardizeFixedStdSimMean(torch.nn.Module):
+    """
+    Class implementing the standardization with mean inferred from the single batch 
+    and fixed std deriving from the model
+    """
+    def __init__(self, config: ConfigData) -> None:
+        """
+        Constructor with custom config dictionary
+        """
+        super(StandardizeFixedStdSimMean, self).__init__()
+        ## parsing configuration dictionary
+        self.ssm = config["ssm"]
+        ## computing params
+        self.params = self.get_params()
+
+    def get_params(self) -> OutputData:
+        """
+        Computes the mean and standard deviation for states and observations 
+        """
+        ## retrieving latent states and observations
+        latent_states = self.ssm.sim["latent_states"]
+        observations = self.ssm.sim["observations"]
+        ## computing mean of latent states and observations
+        mean_x = torch.mean(latent_states)
+        mean_y = torch.mean(observations)
+        ## computing std of latent states and observation 
+        std_x = torch.tensor([self.ssm.sigma_x])
+        std_y = torch.tensor([self.ssm.sigma_y**2 + self.ssm.sigma_x**2])
+        std_y = torch.sqrt(std_y)
+        ## constructing output dictionary
+        params = {"mean_x": mean_x, "mean_y": mean_y, "std_x": std_x, "std_y": std_y}
+        return params
+
+    def forward(self, batch: InputData) -> OutputData:
+        """
+        Performs preprocessing on a batch of data
+        """
+        ## defining keys for latent states and observations
+        latent_state_keys = ["x0", "x1", "xc", "xt"]
+        observation_keys = ["y"]
+        ## normalizing batch
+        batch_copy = dict()
+        for key, tensor in batch.items():
+            ## normalizing with appropriate params
+            if key in latent_state_keys:
+                mean = self.params["mean_x"]
+                std = self.params["std_x"]
+                tensor = standardize(tensor, mean, std)
+            if key in observation_keys:
+                mean = self.params["mean_y"]
+                std = self.params["std_y"]
+                tensor = standardize(tensor, mean, std)
+            ## copying tensor
+            batch_copy[key] = tensor
+        return batch_copy
+
+class StandardizeHistory(torch.nn.Module):
+    """
+    Class implementing the standardization with parameters 
+    inferred from the whole history of each simulation
+    """
+    def __init__(self, config: ConfigData) -> None:
+        """
+        Constructor with custom config dictionary
+        """
+        super(StandardizeHistory, self).__init__()
+        ## parsing configuration dictionary
+        self.ssm = config["ssm"]
+        ## computing params
+        self.params = self.get_params()
+
+    def get_params(self) -> OutputData:
+        """
+        Computes the mean and standard deviation for states and observations 
+        """
+        ## retrieving latent states and observations
+        latent_states = self.ssm.sim["latent_states"]
+        observations = self.ssm.sim["observations"]
+        ## computing mean of latent states and observations
+        mean_x = torch.mean(latent_states, dim = 0)
+        mean_y = torch.mean(observations, dim = 0)
+        ## computing std of latent states and observation 
+        std_x = torch.std(latent_states, dim = 0)
+        std_y = torch.std(observations, dim = 0)
+        ## constructing output dictionary
+        params = {"mean_x": mean_x, "mean_y": mean_y, "std_x": std_x, "std_y": std_y}
+        return params
+
+    def forward(self, batch: InputData) -> OutputData:
+        """
+        Performs preprocessing on a batch of data
+        """
+        ## defining keys for latent states and observations
+        latent_state_keys = ["x0", "x1", "xc", "xt"]
+        observation_keys = ["y"]
+        ## normalizing batch
+        batch_copy = dict()
+        for key, tensor in batch.items():
+            ## normalizing with appropriate params
+            if key in latent_state_keys:
+                mean = self.params["mean_x"]
+                std = self.params["std_x"]
+                tensor = standardize(tensor, mean, std)
+            if key in observation_keys:
+                mean = self.params["mean_y"]
+                std = self.params["std_y"]
+                tensor = standardize(tensor, mean, std)
+            ## copying tensor
+            batch_copy[key] = tensor
+        return batch_copy
+
+class StandardizeFixedStdZeroMean(torch.nn.Module):
+    """
+    Class implementing the standardization with mean zero 
+    and fixed std deriving from the model
+    """
+    def __init__(self, config: ConfigData) -> None:
+        """
+        Constructor with custom config dictionary
+        """
+        super(StandardizeFixedStdZeroMean, self).__init__()
+        ## parsing configuration dictionary
+        self.ssm = config["ssm"]
+        ## computing params
+        self.params = self.get_params()
+
+    def get_params(self) -> OutputData:
+        """
+        Computes the mean and standard deviation for states and observations 
+        """
+        ## computing mean of latent states and observations
+        mean_x = torch.zeros((1))
+        mean_y = torch.zeros((1))
+        ## computing std of latent states and observation 
+        std_x = torch.tensor([self.ssm.sigma_x])
+        std_y = torch.tensor([self.ssm.sigma_y**2 + self.ssm.sigma_x**2])
+        std_y = torch.sqrt(std_y)
+        ## constructing output dictionary
+        params = {"mean_x": mean_x, "mean_y": mean_y, "std_x": std_x, "std_y": std_y}
+        return params
+
+    def forward(self, batch: InputData) -> OutputData:
+        """
+        Performs preprocessing on a batch of data
+        """
+        ## defining keys for latent states and observations
+        latent_state_keys = ["x0", "x1", "xc", "xt"]
+        observation_keys = ["y"]
+        ## normalizing batch
+        batch_copy = dict()
+        for key, tensor in batch.items():
+            ## normalizing with appropriate params
+            if key in latent_state_keys:
+                mean = self.params["mean_x"]
+                std = self.params["std_x"]
+                tensor = standardize(tensor, mean, std)
+            if key in observation_keys:
+                mean = self.params["mean_y"]
+                std = self.params["std_y"]
                 tensor = standardize(tensor, mean, std)
             ## copying tensor
             batch_copy[key] = tensor

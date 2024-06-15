@@ -58,13 +58,15 @@ class DriftObjective(torch.nn.Module):
             z = z_samples[sample_id]
             ## constructing sample dictionary
             mc_batch = {"t": t, "x0": x0, "x1": x1, "xc": xc, "z": z, "y": y}
+            ## preprocessing batch
+            mc_batch = self.preprocessing(mc_batch)
             ## computing interpolant and velocity
             xt = self.interpolant.interpolant(mc_batch)
             rt = self.interpolant.velocity(mc_batch)
             ## augmenting batch
             mc_batch["xt"] = xt
             ## preprocessing batch
-            mc_batch = self.preprocessing(mc_batch)
+            #mc_batch = self.preprocessing(mc_batch)
             ## performing forward pass on the b_net
             bt = self.b_net(mc_batch)
             ## computing and storing loss

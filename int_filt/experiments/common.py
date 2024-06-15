@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 from ..src import DriftObjective
 
-from ..utils import ConfigData, InputData, OutputData, move_batch_to_device, construct_time_discretization
+from ..utils import ConfigData, InputData, OutputData, move_batch_to_device, construct_time_discretization, clone_batch
 
 class Experiment:
     def __init__(self, config: ConfigData) -> None:
@@ -79,36 +79,26 @@ class Experiment:
         r"""
         Simulates the SDE $dX_t = b(t, X_t)dt + \sigma_tdB_t$
         """
+        ## cloning the batch
+        batch_clone = clone_batch(batch)
         ## parsing configuration dictionary
         num_time_steps = sample_config["num_time_steps"]
         ## constructing time discretization
         time, stepsizes = construct_time_discretization(num_time_steps, self.device)
-        ## augmenting batch
-        batch["t"] = time[0]
-        batch["xt"] = batch["x0"]
-        ## preprocessing batch 
-        batch = self.preprocessing(batch)
-        ## computing drift
-        drift = stepsizes[0]*self.b_net(batch)
-        ## sampling noise 
-        eta = torch.randn_like(drift)
-        ## computing diffusion
-        diffusion = self.interpolant.coeffs.sigma(time[0])*torch.sqrt(stepsizes[0])*eta
-        # updating state and current batch
-        x = batch["x0"]
-        x = x + drift + diffusion
+        ## retrieving the starting point
+        x = batch_clone["x0"]
         # iterating over each step of the euler discretization
-        for n in range(1, num_time_steps):
-            # getting the stepsize
+        for n in range(num_time_steps):
+            # getting the time and stepsize
             delta_t = stepsizes[n]
             t = time[n]
             ## updating current batch
-            batch["xt"] = x
-            batch["t"] = t
+            batch_clone["xt"] = x
+            batch_clone["t"] = t
             ## preprocessing batch 
-            batch = self.preprocessing(batch)
+            batch_clone = self.preprocessing(batch_clone)
             # computing adjusted drift
-            drift = self.b_net(batch)
+            drift = self.b_net(batch_clone)
             drift = delta_t*drift
             # sampling noise
             eta = torch.randn_like(drift)

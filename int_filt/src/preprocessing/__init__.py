@@ -1,5 +1,8 @@
 from .preprocessing import (
     IdentityPreproc,
-    StandardizeSimParamsPreproc,
-    StandardizeBatchParamsPreproc, 
+    StandardizeSim,
+    StandardizeBatch,
+    StandardizeFixedStdSimMean,
+    StandardizeHistory,
+    StandardizeFixedStdZeroMean
 )

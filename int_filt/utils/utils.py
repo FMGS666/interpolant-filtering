@@ -6,6 +6,8 @@ import torch
 import random
 import numpy as np
 
+from math import floor
+
 ## defining function time discretization
 def construct_time_discretization(N, device, lbound = 0.0, ubound = 1.0):    
     time = torch.linspace(lbound, ubound, N + 1, device = device)
@@ -122,6 +124,14 @@ def move_batch_to_device(batch, device):
         batch_copy[key] = tensor
     return batch_copy
 
+## function for cloning a batch of tensors
+def clone_batch(batch):
+    batch_copy = dict()
+    for key, tensor in batch.items():
+        tensor = tensor.clone()
+        batch_copy[key] = tensor
+    return batch_copy
+
 ## Standardizes a tensor with the given mean and standard deviation
 def standardize(tensor, mean, std):
     ## handling device
@@ -130,4 +140,14 @@ def standardize(tensor, mean, std):
     std = std.to(device)
     ## scaling tensor
     tensor = (tensor - mean) / std
+    return tensor
+
+## Unstandardizes a tensor with the given mean and standard deviation
+def unstandardize(tensor, mean, std):
+    ## handling device
+    device = tensor.device
+    mean = mean.to(device)
+    std = std.to(device)
+    ## scaling tensor
+    tensor = tensor*std + mean
     return tensor

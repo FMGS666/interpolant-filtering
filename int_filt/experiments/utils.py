@@ -20,8 +20,11 @@ from ..src import (
     SimNLGTanh,
     SimNLGExp,
     IdentityPreproc,
-    StandardizeSimParamsPreproc,
-    StandardizeBatchParamsPreproc
+    StandardizeSim,
+    StandardizeBatch,
+    StandardizeFixedStdSimMean,
+    StandardizeHistory,
+    StandardizeFixedStdZeroMean
 )
 
 from ..utils import ConfigData
@@ -36,8 +39,11 @@ NON_LINEARITIES = {
 
 PREPROCESSING = {
     "none": IdentityPreproc,
-    "sim": StandardizeSimParamsPreproc,
-    "batch": StandardizeBatchParamsPreproc, 
+    "sim": StandardizeSim,
+    "batch": StandardizeBatch,
+    "fixed-std": StandardizeFixedStdSimMean,
+    "history": StandardizeHistory,
+    "fixed-std-zero-mean": StandardizeFixedStdZeroMean,
 }
 
 def create_experiment(config: ConfigData) -> Experiment:
