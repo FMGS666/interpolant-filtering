@@ -5,8 +5,12 @@ from pathlib import Path
 
 from .experiments import create_experiment
 
-from .utils.config import configuration
-from .utils.utils import ensure_reproducibility, dump_config
+from .utils import (
+    configuration, 
+    ensure_reproducibility, 
+    dump_config
+)
+
 ACTIVATIONS = {
     "relu": torch.nn.ReLU()
 }

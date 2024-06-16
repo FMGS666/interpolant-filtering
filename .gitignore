@@ -7,8 +7,7 @@ __pycache__/
 *.so
 
 # Logging output
-exp/
-out/
+log/
 
 # Distribution / packaging
 .Python

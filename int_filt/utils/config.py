@@ -9,8 +9,8 @@ import argparse
 def configuration(args = None):
     ## default output directory
     run_id = datetime.now().strftime("%Y-%m-%d")+"/run_" + datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    out_dir = "./out/" + run_id
-    dump_dir = "./exp/" + run_id
+    out_dir = "./log/out/" + run_id
+    dump_dir = "./log/exp/" + run_id
     parser = argparse.ArgumentParser(description="CDTSurrSI")
     ## interpolant options
     interpolant_group = parser.add_argument_group("Interpolant Options")
@@ -63,7 +63,7 @@ def configuration(args = None):
     device_group.add_argument("--device", "-d", default = "cuda", help = "The device to run the computation on")
     ## preprocessing options
     preprocessing_group = parser.add_argument_group("Preprocessing Options")
-    device_group.add_argument("--preprocessing", "-pp", default = "none", help = "The preprocessing method to be used")
+    device_group.add_argument("--preprocessing", "-pp", default = "sim", help = "The preprocessing method to be used")
     if args is None:
         return parser.parse_args()
     else:
