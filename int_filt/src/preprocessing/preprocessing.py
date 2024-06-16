@@ -19,7 +19,7 @@ class IdentityPreproc(torch.nn.Module):
         ## initializing attributes
         self.config = config
     
-    def standardize(self, batch: InputData) -> OutputData:
+    def forward(self, batch: InputData) -> OutputData:
         """
         Performs preprocessing on a batch of data
         """
