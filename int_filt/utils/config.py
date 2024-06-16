@@ -30,7 +30,7 @@ def configuration(args = None):
     b_net_group.add_argument("--b-net-amortized","-bamrt", action = "store_true", help = "Whether to perform amortized learning by concatenating the observation to the input for the $b$ model")
     ## experiment options
     experiment_group = parser.add_argument_group("Experiment Options")
-    experiment_group.add_argument("--experiment", "-exp", default = "ou", help = "The experiment to be run")
+    experiment_group.add_argument("--experiment", "-exp", default = "nlg", help = "The experiment to be run")
     ## ssm experiment options
     ssm_group = parser.add_argument_group("SSM Options")
     ssm_group.add_argument("--sigma-x", "-sx", default = 1.0, type = float, help = "The standard deviation of the latent states for the OU model")
