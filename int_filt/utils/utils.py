@@ -141,13 +141,3 @@ def standardize(tensor, mean, std):
     ## scaling tensor
     tensor = (tensor - mean) / std
     return tensor
-
-## Unstandardizes a tensor with the given mean and standard deviation
-def unstandardize(tensor, mean, std):
-    ## handling device
-    device = tensor.device
-    mean = mean.to(device)
-    std = std.to(device)
-    ## scaling tensor
-    tensor = tensor*std + mean
-    return tensor
