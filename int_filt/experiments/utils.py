@@ -58,6 +58,8 @@ def create_experiment(config: ConfigData) -> Experiment:
         ## mc
         mc_config = config["mc_config"]
         ## logging 
+        log = config["log"]
+        logging_step = config["logging_step"]
         log_dir = config["log_dir"]
         writer = SummaryWriter(log_dir=os.path.join(log_dir, 'summary'))
         ## device
@@ -98,6 +100,8 @@ def create_experiment(config: ConfigData) -> Experiment:
             "interpolant": interpolant,
             "b_net": b_net, 
             "ssm": ssm,
+            "log": log, 
+            "logging_step": logging_step,
             "writer": writer,
             "mc_config": mc_config,
             "device": device,
@@ -126,6 +130,8 @@ def create_experiment(config: ConfigData) -> Experiment:
         ## mc
         mc_config = config["mc_config"]
         ## logging 
+        log = config["log"]
+        logging_step = config["logging_step"]
         log_dir = config["log_dir"]
         writer = SummaryWriter(log_dir=os.path.join(log_dir, 'summary'))
         ## device
@@ -168,6 +174,8 @@ def create_experiment(config: ConfigData) -> Experiment:
             "interpolant": interpolant,
             "b_net": b_net, 
             "ssm": ssm,
+            "log": log, 
+            "logging_step": logging_step,
             "writer": writer,
             "mc_config": mc_config,
             "device": device,

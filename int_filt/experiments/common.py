@@ -2,6 +2,7 @@
 File containing common code for running experiment
 """
 import torch
+import os
 
 from typing import Optional
 from tqdm import tqdm
@@ -25,7 +26,8 @@ class Experiment:
         self.mc_config = self.config["mc_config"]
         self.device = self.config["device"]
         self.preprocessing = self.config["preprocessing"]
-        self.logging_step = 5
+        self.log = self.config["log"]
+        self.logging_step = self.config["logging_step"]
 
     def get_batch(self) -> OutputData:
         """
@@ -49,6 +51,9 @@ class Experiment:
             "preprocessing": self.preprocessing
         }
         Lb = DriftObjective(Lb_config)
+        ## allocating memory for storing loss and lr
+        loss_history = torch.zeros((num_grad_steps))
+        lr_history = torch.zeros((num_grad_steps))
         ## defining iterator
         iterator = tqdm(range(num_grad_steps))
         ## starting optimization
@@ -68,13 +73,20 @@ class Experiment:
                 scheduler.step()
             # retrieving learning rate
             current_lr = optimizer.param_groups[0]["lr"]
-            ## logging
+            ## progress bar
             iterator.set_description(f"Grad Step {grad_step + 1}/{num_grad_steps}, MSELoss: {loss_value}, Learning Rate {current_lr}")
             iterator.update()
-            if grad_step % self.logging_step == 0:
+            ## storing loss and lr
+            loss_history[grad_step] = loss_value
+            lr_history[grad_step] = current_lr
+            ## logging
+            if self.log and (grad_step % self.logging_step == 0):
                 self.writer.add_scalar("train/drift_loss", loss_value, grad_step)
                 self.writer.add_scalar("train/learning_rate", current_lr, grad_step)
-    
+        ## constructing result dictionary
+        train_out = {"loss_history": loss_history, "lr_history": lr_history}
+        return train_out
+
     def simulate_sde(self, batch: InputData, sample_config: ConfigData) -> OutputData:
         r"""
         Simulates the SDE $dX_t = b(t, X_t)dt + \sigma_tdB_t$

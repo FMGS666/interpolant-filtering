@@ -4,6 +4,8 @@ This file contains utility functions needed across the code base
 
 import torch
 import random
+import json
+
 import numpy as np
 
 from math import floor
@@ -141,3 +143,8 @@ def standardize(tensor, mean, std):
     ## scaling tensor
     tensor = (tensor - mean) / std
     return tensor
+
+## function for dumping a given configuration dictionary
+def dump_config(config, filename):
+    with open(filename, "w") as f_handle:
+        json.dump(config, f_handle)

@@ -6,8 +6,7 @@ from pathlib import Path
 from .experiments import create_experiment
 
 from .utils.config import configuration
-from .utils.utils import ensure_reproducibility
-
+from .utils.utils import ensure_reproducibility, dump_config
 ACTIVATIONS = {
     "relu": torch.nn.ReLU()
 }
@@ -29,12 +28,18 @@ DEVICES = {
 if __name__ == "__main__":
     ## parsing arguments
     args = configuration()
-    ## retrieving activations
-    args.b_net_activation = ACTIVATIONS[args.b_net_activation]
-    ## retrieving device
-    args.device = DEVICES[args.device]
-    ## creating experiment
     args = vars(args)
+    ## dump dir 
+    dump_dir = args["dump_dir"]
+    path = Path(dump_dir)
+    path.mkdir(parents=True, exist_ok=True)
+    ## saving configuration
+    if args["log"]:
+       dump_config(args, os.path.join(dump_dir, "config.json"))
+    ## retrieving activations
+    args["b_net_activation"] = ACTIVATIONS[args["b_net_activation"]]
+    ## retrieving device
+    args["device"] = DEVICES[args["device"]]
     ## adding mc configuration
     args["mc_config"] = {"num_samples": args["num_samples"]}
     ## prepare for training drift
@@ -43,15 +48,10 @@ if __name__ == "__main__":
     b_net_scheduler = args["b_net_scheduler"]
     b_net_lr = args["b_net_lr"]
 
-    ## dump dir 
-    dump_dir = args["dump_dir"]
-    path = Path(dump_dir)
-    path.mkdir(parents=True, exist_ok=True)
-
-    ## reproducibility
+    ## setting reproducibility
     random_seed = args["random_seed"]
     ensure_reproducibility(random_seed)
-
+    
     ## creating experiment
     experiment = create_experiment(args)
     ## initializing optimizer and scheduler
