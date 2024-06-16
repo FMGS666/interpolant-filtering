@@ -15,6 +15,7 @@ def configuration(args = None):
     ## interpolant options
     interpolant_group = parser.add_argument_group("Interpolant Options")
     interpolant_group.add_argument("--interpolant-method", "-mth", default = "pffp_v0", help = "The Interpolant method used")
+    interpolant_group.add_argument("--epsilon", "-e", default = 1.0, type = float, help = "The Interpolant method used")
     ## mc sampling options
     mc_group = parser.add_argument_group("MC Integration Options")
     mc_group.add_argument("--num-samples", "-ns", default = 100, type = int, help = "The number of samples for MC integration")

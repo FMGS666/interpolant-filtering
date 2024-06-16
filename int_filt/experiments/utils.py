@@ -49,6 +49,7 @@ def create_experiment(config: ConfigData) -> Experiment:
         num_sims = config["num_sims"]
         ## interpolant
         interpolant_method = config["interpolant_method"]
+        epsilon = config["epsilon"]
         ## b-net 
         b_net_hidden_dims = config["b_net_hidden_dims"]
         b_net_activation = config["b_net_activation"]
@@ -73,7 +74,7 @@ def create_experiment(config: ConfigData) -> Experiment:
         }
         ssm = SimOrnsteinUhlenbeck(ssm_config)
         ## initializing interpolant
-        interpolant_config = {"method": interpolant_method}
+        interpolant_config = {"method": interpolant_method, "epsilon": epsilon}
         interpolant = create_interpolant(interpolant_config)
         ## initializing models
         models_config = {
@@ -116,6 +117,7 @@ def create_experiment(config: ConfigData) -> Experiment:
         non_linearity = config["non_linearity"]
         ## interpolant
         interpolant_method = config["interpolant_method"]
+        epsilon = config["epsilon"]
         ## b-net 
         b_net_hidden_dims = config["b_net_hidden_dims"]
         b_net_activation = config["b_net_activation"]
@@ -142,7 +144,7 @@ def create_experiment(config: ConfigData) -> Experiment:
         }
         ssm = NON_LINEARITIES[non_linearity](ssm_config)
         ## initializing interpolant
-        interpolant_config = {"method": interpolant_method}
+        interpolant_config = {"method": interpolant_method, "epsilon": epsilon}
         interpolant = create_interpolant(interpolant_config)
         ## initializing models
         models_config = {
