@@ -45,8 +45,8 @@ class StandardizeSim(torch.nn.Module):
         Computes the mean and standard deviation for states and observations 
         """
         ## retrieving latent states and observations
-        latent_states = self.ssm.sim["latent_states"]
-        observations = self.ssm.sim["observations"]
+        latent_states = self.ssm.train_sim["latent_states"]
+        observations = self.ssm.train_sim["observations"]
         ## computing mean of latent states and observations
         mean_x = torch.mean(latent_states, dim = 0)
         mean_y = torch.mean(observations, dim = 0)

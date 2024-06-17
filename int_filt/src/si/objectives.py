@@ -44,15 +44,16 @@ class DriftObjective(torch.nn.Module):
         ## retrieving observation
         y = batch["y"]
         ## retrieve required data
-        num_samples = self.mc_config["num_samples"]
+        num_mc_samples = self.mc_config["num_mc_samples"]
         batch_size = x0.shape[0]
         device = x0.device
         ## prepare for mc estimation
-        loss_store = torch.zeros((num_samples), device = x0.device)
-        mc_samples = torch.rand((num_samples, batch_size), device = x0.device)
-        z_samples = torch.randn((num_samples, *x0.shape), device = device)
+        loss_store = torch.zeros((num_mc_samples), device = x0.device)
+        drift_store = torch.zeros((num_mc_samples, *x0.shape))
+        mc_samples = torch.rand((num_mc_samples, batch_size), device = x0.device)
+        z_samples = torch.randn((num_mc_samples, *x0.shape), device = device)
         ## start mc sampling
-        for sample_id in range(num_samples):
+        for sample_id in range(num_mc_samples):
             ## get sampled time indices
             t = mc_samples[sample_id]
             z = z_samples[sample_id]
@@ -67,9 +68,13 @@ class DriftObjective(torch.nn.Module):
             mc_batch["xt"] = xt
             ## performing forward pass on the b_net
             bt = self.b_net(mc_batch)
+            ## storing the sampled drift
+            drift_store[sample_id] = bt.clone().detach()
             ## computing and storing loss
             loss = mse_loss(bt, rt)
             loss_store[sample_id] = loss
         ## aggregating the loss
         loss = torch.mean(loss_store)
-        return loss
+        ## constructing output dictionary
+        loss_dict = {"loss": loss, "drift_store": drift_store}
+        return loss_dict

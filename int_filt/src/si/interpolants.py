@@ -20,7 +20,6 @@ class StochasticInterpolant(torch.nn.Module):
         super(StochasticInterpolant, self).__init__()
         ## initializing attributes
         self.config = config
-        self.debug = False
 
     """
     Methods for computing the interpolant
@@ -103,9 +102,6 @@ class PFFPInterpolant(StochasticInterpolant):
         ## reshaping coefficients
         alpha = safe_broadcast(alpha, x0)
         beta = safe_broadcast(beta, x0)
-        ## displaying debugging message
-        if self.debug:
-            print(f"{alpha.shape=}, {beta.shape=}, {x0.shape=}, {x1.shape=}, {t.shape=}")
         return alpha*x0 + beta*x1
 
     def gamma(self, batch: InputData) -> OutputData:
@@ -120,9 +116,6 @@ class PFFPInterpolant(StochasticInterpolant):
         ## reshaping coefficients
         t = safe_broadcast(t, z)
         sigma = safe_broadcast(sigma, z)
-        ## displaying debugging message
-        if self.debug:
-            print(f"{sigma.shape=}, {t.shape=}, {z.shape=}")
         return torch.sqrt(t)*sigma*z
 
     """
@@ -142,9 +135,6 @@ class PFFPInterpolant(StochasticInterpolant):
         ## reshaping coefficients
         alpha_dot = safe_broadcast(alpha_dot, x0)
         beta_dot = safe_broadcast(beta_dot, x0)
-        ## displaying debugging message
-        if self.debug:
-            print(f"{alpha_dot.shape=}, {beta_dot.shape=}, {x0.shape=}, {x1.shape=}, {t.shape=}")
         return alpha_dot*x0 + beta_dot*x1
 
     def gamma_dot(self, batch: InputData) -> OutputData:
@@ -159,7 +149,4 @@ class PFFPInterpolant(StochasticInterpolant):
         ## reshaping coefficients
         t = safe_broadcast(t, z)
         sigma_dot = safe_broadcast(sigma_dot, z)
-        ## displaying debugging message
-        if self.debug:
-            print(f"{sigma_dot.shape=}, {t.shape=}, {z.shape=}")
         return torch.sqrt(t)*sigma_dot*z

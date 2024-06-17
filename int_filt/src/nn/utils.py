@@ -11,27 +11,20 @@ from ...utils import ConfigData, ModelData
 
 def create_models(config: ConfigData) -> ModelData:
     if config["backbone"] == "mlp":
-        ## parsing configuration dictionary
-        spatial_dims = config["spatial_dims"]
-        b_net_hidden_dims = config["b_net_hidden_dims"]
-        b_net_activation = config["b_net_activation"]
-        b_net_activate_final = config["b_net_activate_final"]
-        b_net_amortized = config["b_net_amortized"]
-        device = config["device"]
         ## defining inputs dims
-        input_dims = spatial_dims*3 + 1 if b_net_amortized else spatial_dims*2 + 1
+        input_dims = config["spatial_dims"]*3 + 1 if config["b_net_activate_final"] else config["spatial_dims"]*2 + 1
         ## initializing $b$ backbone
         b_backbone_config = {
             "input_dim": input_dims,
-            "hidden_dims": b_net_hidden_dims,
-            "output_dim": spatial_dims,
-            "activation": b_net_activation,
-            "activate_final": b_net_activate_final,
+            "hidden_dims": config["b_net_hidden_dims"],
+            "output_dim": config["spatial_dims"],
+            "activation": config["b_net_activation"],
+            "activate_final": config["b_net_activate_final"],
         }
         b_backbone = MLP(b_backbone_config)
         ## initializing $b$ model
-        b_net_config = {"backbone": b_backbone, "amortized": b_net_amortized}
+        b_net_config = {"backbone": b_backbone, "amortized": config["b_net_amortized"]}
         b_net = B_Net(b_net_config)
-        b_net.to(device)
+        b_net.to(config["device"])
     models = {"b_net": b_net}
     return models

@@ -99,7 +99,8 @@ class SimNLGCos(SimNonLinearGaussian):
         """
         super(SimNLGCos, self).__init__(config)
         ## running the simulations
-        self.sim = self.simulate()
+        self.train_sim = self.simulate()
+        self.test_sim = self.simulate()
 
     def non_linearity(self, x: InputData) -> OutputData:
         r"""
@@ -120,7 +121,8 @@ class SimNLGSin(SimNonLinearGaussian):
         """
         super(SimNLGSin, self).__init__(config)
         ## running the simulations
-        self.sim = self.simulate()
+        self.train_sim = self.simulate()
+        self.test_sim = self.simulate()
 
     def non_linearity(self, x: InputData) -> OutputData:
         r"""
@@ -141,7 +143,8 @@ class SimNLGTan(SimNonLinearGaussian):
         """
         super(SimNLGTan, self).__init__(config)
         ## running the simulations
-        self.sim = self.simulate()
+        self.train_sim = self.simulate()
+        self.test_sim = self.simulate()
 
     def non_linearity(self, x: InputData) -> OutputData:
         r"""
@@ -149,34 +152,6 @@ class SimNLGTan(SimNonLinearGaussian):
         $f(x) = x - \delta_t \operatorname{exp} \{x\}$
         """
         update = torch.tan(self.beta*x)
-        return x + self.step_size*update
-
-##############################################################################################################
-##############################################################################################################
-################################### DEFINING THE NON LINEARITIES #############################################
-###################################          HYPERBOLIC          #############################################
-##############################################################################################################
-##############################################################################################################
-
-class SimNLGTanh(SimNonLinearGaussian):
-    """
-    Class implementing a non-linear gaussian state transition
-    with gaussian observation model
-    """
-    def __init__(self, config: ConfigData) -> None:
-        """
-        Constructor with custom config dictionary
-        """
-        super(SimNLGTanh, self).__init__(config)
-        ## running the simulations
-        self.sim = self.simulate()
-
-    def non_linearity(self, x: InputData) -> OutputData:
-        r"""
-        Computes the non-linear update
-        $f(x) = x - \delta_t \operatorname{exp} \{x\}$
-        """
-        update = torch.tanh(self.beta*x)
         return x + self.step_size*update
 
 ##############################################################################################################
@@ -197,7 +172,8 @@ class SimNLGExp(SimNonLinearGaussian):
         """
         super(SimNLGExp, self).__init__(config)
         ## running the simulations
-        self.sim = self.simulate()
+        self.train_sim = self.simulate()
+        self.test_sim = self.simulate()
 
     def non_linearity(self, x: InputData) -> OutputData:
         r"""

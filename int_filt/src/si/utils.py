@@ -11,19 +11,15 @@ from ...utils import ConfigData
 
 def create_interpolant(config: ConfigData) -> StochasticInterpolant:
     if config["method"] == "pffp_v0":
-        ## setting epsilon to 1 by defauls
-        epsilon = config["epsilon"]
         ## initializing the interpolant coefficients
-        coeffs_config = {"epsilon": epsilon}
+        coeffs_config = {"epsilon": config["epsilon"]}
         coeffs = PFFPInterpolantCoefficients_v0(coeffs_config)
         ## initializing the interpolant
         interp_config = {"coeffs": coeffs}
         interpolant = PFFPInterpolant(interp_config)
     if config["method"] == "pffp_v1":
-        ## setting epsilon to 1 by defauls
-        epsilon = config["epsilon"]
         ## initializing the interpolant coefficients
-        coeffs_config = {"epsilon": epsilon}
+        coeffs_config = {"epsilon": config["epsilon"]}
         coeffs = PFFPInterpolantCoefficients_v1(coeffs_config)
         ## initializing the interpolant
         interp_config = {"coeffs": coeffs}

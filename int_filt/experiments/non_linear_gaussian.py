@@ -16,31 +16,22 @@ class NLGExperiment(Experiment):
         Constructor with custom config dictionary
         """
         super(NLGExperiment, self).__init__(config)
-        ## parsing configuration dictionary
-        self.interpolant = self.config["interpolant"]
-        self.b_net = self.config["b_net"]
-        self.ssm = self.config["ssm"]
-        self.writer = self.config["writer"]
-        self.mc_config = self.config["mc_config"]
-        self.device = self.config["device"]
-        self.preprocessing = self.config["preprocessing"]
-        self.logging_step = 5
     
-    def get_batch(self) -> OutputData:
+    def get_batch(self, train: bool = True) -> OutputData:
         """
         Samples a batch from the ssm
         """
         ## retrieving necessary data
         num_iters = self.ssm.num_iters
         num_sims = self.ssm.num_sims
-        latent_states = self.ssm.sim["latent_states"]
-        observations = self.ssm.sim["observations"]
-        ## sampling random indices
-        indices = torch.randint(0, num_iters - 1, (num_sims, ))
+        latent_states = self.ssm.train_sim["latent_states"]
+        observations = self.ssm.train_sim["observations"]
+        ## sampling random time index
+        index = torch.randint(num_iters - 1, (1, )).item()
         ## getting current states
-        x0 = torch.diagonal(latent_states[indices]).T
-        x1 = torch.diagonal(latent_states[indices + 1]).T
-        y = torch.diagonal(observations[indices + 1]).T
+        x0 = latent_states[index]
+        x1 = latent_states[index + 1]
+        y = observations[index + 1]
         xc = x0
         ## constructing the batch
         batch = {"x0": x0.float(), "x1": x1.float(), "xc": xc.float(), "y": y.float()}

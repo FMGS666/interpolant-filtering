@@ -31,47 +31,39 @@ DEVICES = {
 
 if __name__ == "__main__":
     ## parsing arguments
-    args = configuration()
-    args = vars(args)
-    ## dump dir 
-    dump_dir = args["dump_dir"]
-    path = Path(dump_dir)
-    path.mkdir(parents=True, exist_ok=True)
-    ## saving configuration
-    if args["log"]:
-       dump_config(args, os.path.join(dump_dir, "config.json"))
-    ## retrieving activations
-    args["b_net_activation"] = ACTIVATIONS[args["b_net_activation"]]
-    ## retrieving device
-    args["device"] = DEVICES[args["device"]]
+    config = configuration()
+    config = vars(config)
+    ## displaying current arguments
+    print(args)
+    ## optional logging
+    if config["log_results"]:
+        ## creating dump dir 
+        path = Path(config["dump_dir"])
+        path.mkdir(parents=True, exist_ok=True)
+        dump_config(config, os.path.join(config["dump_dir"], "config.json"))
+    ## retrieving activation and device
+    config["b_net_activation"] = ACTIVATIONS[config["b_net_activation"]]
+    config["device"] = DEVICES[config["device"]]
     ## adding mc configuration
-    args["mc_config"] = {"num_samples": args["num_samples"]}
-    ## prepare for training drift
-    b_net_num_grad_step = args["b_net_num_grad_steps"]
-    b_net_optimizer = args["b_net_optimizer"]
-    b_net_scheduler = args["b_net_scheduler"]
-    b_net_lr = args["b_net_lr"]
-
+    config["mc_config"] = {"num_mc_samples": config["num_mc_samples"]}
     ## setting reproducibility
-    random_seed = args["random_seed"]
-    ensure_reproducibility(random_seed)
-    
+    ensure_reproducibility(config["random_seed"])
     ## creating experiment
-    experiment = create_experiment(args)
+    experiment = create_experiment(config)
     ## initializing optimizer and scheduler
-    b_net_optimizer = OPTIMIZERS[b_net_optimizer](experiment.b_net.backbone.parameters(), lr = b_net_lr)
-    b_net_scheduler = SCHEDULERS[b_net_scheduler]
+    b_net_optimizer = OPTIMIZERS[config["b_net_optimizer"]](experiment.b_net.backbone.parameters(), lr = config["b_net_lr"])
+    b_net_scheduler = SCHEDULERS[config["b_net_scheduler"]]
     if b_net_scheduler is not None:
-        b_net_scheduler = b_net_scheduler(b_net_optimizer, b_net_num_grad_step)
-
+        b_net_scheduler = b_net_scheduler(b_net_optimizer, config["b_net_num_grad_steps"])
     ## constructing optimization config dictionary
     b_net_optim_config = {
-        "num_grad_steps": b_net_num_grad_step,
         "optimizer": b_net_optimizer,
-        "scheduler": b_net_scheduler
+        "scheduler": b_net_scheduler,
+        "num_grad_steps": config["b_net_num_grad_steps"],
     }
-
     ## training b_net 
     experiment.train(b_net_optim_config)
-    ## saving the weights
-    torch.save(experiment.b_net.state_dict(), os.path.join(dump_dir, "b_net.pt"))
+    ## optional logging
+    if config["log_results"]:
+        ## saving the model
+        torch.save(experiment.b_net.state_dict(), os.path.join(dump_dir, "b_net.pt"))
