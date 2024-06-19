@@ -14,7 +14,7 @@ class OPTIONS:
     optimizer = ["adam", "adam-w"]
     scheduler = ["cosine-annealing", "none"]
     device = ["cuda", "cpu"]
-    preprocessing = ["none", "sim"]
+    preprocessing = ["none", "sim", "sim-history"]
 
 def configuration(args = None):
     ## default output directory
@@ -76,6 +76,13 @@ def configuration(args = None):
     sampling_group = parser.add_argument_group("Sampling Options")
     sampling_group.add_argument("--num-samples", "-ns", default = 500, type = int, help = "The number of samples to be drawn from the learned distribution")
     sampling_group.add_argument("--num-time-steps", "-nts", default = 100, type = int, help = "The number of time steps in the discretization of the SDE")
+    sampling_group.add_argument("--num-ar-steps", "-nars", default = 100_000, type = int, help = "The number of autoregressive time steps to be taken during generation")
+    sampling_group.add_argument("--initial-time-step", "-its", default = 0, type = int, help = "The time index at which to start the autoregressive sampling")
+    sampling_group.add_argument("--ar-sample-train", "-arst", action = "store_true", help = "Whether to perform autoregressive sampling on the training dataset")
+    sampling_group.add_argument("--full-out", "-fo", action = "store_true", help = "Whether to store the full output during sampling")
+    ## memory management options
+    memory_group = parser.add_argument_group("Memory Management Options")
+    memory_group.add_argument("--clear-memory", "-cm", action = "store_true", help = "Whether to clear memory and cache after each forward call")
     if args is None:
         return parser.parse_args()
     else:

@@ -3,6 +3,8 @@ Class for running the experiment on the Ornstein-Uhlenbeck model
 """
 import torch
 
+from typing import Optional
+
 from .common import Experiment
 
 from ..utils import ConfigData, OutputData
@@ -17,7 +19,7 @@ class OUExperiment(Experiment):
         """
         super(OUExperiment, self).__init__(config)
     
-    def get_batch(self) -> OutputData:
+    def get_batch(self, train: Optional[bool] = None, idx: Optional[int] = None) -> OutputData:
         """
         Samples a batch from the ssm
         """

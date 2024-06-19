@@ -8,7 +8,8 @@ from .experiments import create_experiment
 from .utils import (
     configuration, 
     ensure_reproducibility, 
-    dump_config
+    dump_config,
+    move_batch_to_device
 )
 
 ACTIVATIONS = {
@@ -34,7 +35,7 @@ if __name__ == "__main__":
     config = configuration()
     config = vars(config)
     ## displaying current arguments
-    print(args)
+    print(config)
     ## optional logging
     if config["log_results"]:
         ## creating dump dir 
@@ -50,6 +51,13 @@ if __name__ == "__main__":
     ensure_reproducibility(config["random_seed"])
     ## creating experiment
     experiment = create_experiment(config)
+    ## dumping particles
+    if config["log_results"]:
+        experiment.ssm.dump_sim(config["dump_dir"])
+
+    #####################################################################################################################
+    ################################################    TRAINING    #####################################################
+    #####################################################################################################################
     ## initializing optimizer and scheduler
     b_net_optimizer = OPTIMIZERS[config["b_net_optimizer"]](experiment.b_net.backbone.parameters(), lr = config["b_net_lr"])
     b_net_scheduler = SCHEDULERS[config["b_net_scheduler"]]
@@ -66,4 +74,26 @@ if __name__ == "__main__":
     ## optional logging
     if config["log_results"]:
         ## saving the model
-        torch.save(experiment.b_net.state_dict(), os.path.join(dump_dir, "b_net.pt"))
+        torch.save(experiment.b_net.state_dict(), os.path.join(config["dump_dir"], "b_net.pt"))
+
+    #####################################################################################################################
+    ###############################################    GENERATION    ####################################################
+    #####################################################################################################################
+    ## constructing autoregressive sampling config dictionary
+    ar_sample_config = {
+        "num_time_steps": config["num_time_steps"],
+        "num_ar_steps": config["num_ar_steps"],
+        "initial_time_step": config["initial_time_step"],
+        "ar_sample_train": config["ar_sample_train"],
+    }
+    ## sampling from model
+    sample_dict = experiment.ar_sample(batch, config = ar_sample_config)
+    ## parsing samples dict
+    ar_samples = sample_dict["ar_samples"]
+    ## displaying the shape of the results
+    print(f"{samples.shape=},", end = " ")
+    if config["full_out"]:
+        trajectory = sample_dict["trajectory"]
+        drift = sample_dict["drift"]
+        diffusion = sample_dict["diffusion"]
+        print(f"{trajectory.shape=}, {drift.shape=}, {diffusion.shape=}")

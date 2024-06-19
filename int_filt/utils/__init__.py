@@ -2,7 +2,8 @@ from .types import (
     ConfigData, 
     InputData, 
     OutputData,
-    ModelData
+    ModelData,
+    PathData
 )
 
 from .utils import (
@@ -14,6 +15,7 @@ from .utils import (
     clone_batch,
     standardize,
     dump_config,
+    dump_tensors
 )
 
 from .config import configuration

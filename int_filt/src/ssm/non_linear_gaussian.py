@@ -2,6 +2,7 @@
 File containing the implementation of pendulum state OU model
 """
 import torch
+import os
 
 import numpy as np
 
@@ -10,7 +11,13 @@ from tqdm import tqdm
 
 from .ssm import SimSSM
 
-from ...utils import ConfigData, InputData, OutputData
+from ...utils import (
+    ConfigData, 
+    InputData, 
+    OutputData,
+    PathData, 
+    dump_tensors
+)
 
 class SimNonLinearGaussian(SimSSM):
     """
@@ -80,6 +87,18 @@ class SimNonLinearGaussian(SimSSM):
         ## defining simulation dictionary
         sim = {"latent_states": latent_states_store, "observations": observation_store}
         return sim
+    
+    def dump_sim(self, target_dir: PathData) -> None:
+        """
+        Dumps the simulation to target directory
+        """
+        ## defining target files
+        train_file = os.path.join(target_dir, "train.npz")
+        test_file = os.path.join(target_dir, "test.npz")
+        ## saving train simulation
+        dump_tensors(train_file, self.train_sim)
+        ## saving test simulation
+        dump_tensors(test_file, self.test_sim)
 
 ##############################################################################################################
 ##############################################################################################################

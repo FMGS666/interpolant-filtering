@@ -29,6 +29,7 @@ class DriftObjective(torch.nn.Module):
         self.interpolant = self.config["interpolant"]
         self.mc_config = self.config["mc_config"]
         self.preprocessing = self.config["preprocessing"]
+        self.full_out = self.config["full_out"]
 
     def forward(self, batch: InputData) -> OutputData:
         """
@@ -49,7 +50,8 @@ class DriftObjective(torch.nn.Module):
         device = x0.device
         ## prepare for mc estimation
         loss_store = torch.zeros((num_mc_samples), device = x0.device)
-        drift_store = torch.zeros((num_mc_samples, *x0.shape))
+        if self.full_out:
+            drift_store = torch.zeros((num_mc_samples, *x0.shape))
         mc_samples = torch.rand((num_mc_samples, batch_size), device = x0.device)
         z_samples = torch.randn((num_mc_samples, *x0.shape), device = device)
         ## start mc sampling
@@ -69,12 +71,15 @@ class DriftObjective(torch.nn.Module):
             ## performing forward pass on the b_net
             bt = self.b_net(mc_batch)
             ## storing the sampled drift
-            drift_store[sample_id] = bt.clone().detach()
+            if self.full_out:
+                drift_store[sample_id] = bt.clone().detach()
             ## computing and storing loss
             loss = mse_loss(bt, rt)
             loss_store[sample_id] = loss
         ## aggregating the loss
         loss = torch.mean(loss_store)
         ## constructing output dictionary
-        loss_dict = {"loss": loss, "drift_store": drift_store}
+        loss_dict = {"loss": loss,} 
+        if self.full_out:
+            loss_dict["drift_store"] = drift_store
         return loss_dict

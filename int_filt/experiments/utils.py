@@ -19,6 +19,7 @@ from ..src import (
     SimNLGTan,
     SimNLGExp,
     IdentityPreproc,
+    StandardizeSimHistory,
     StandardizeSim,
 )
 
@@ -34,6 +35,7 @@ NON_LINEARITIES = {
 PREPROCESSING = {
     "none": IdentityPreproc,
     "sim": StandardizeSim,
+    "sim-history": StandardizeSimHistory,
 }
 
 def create_experiment(config: ConfigData) -> Experiment:
@@ -82,6 +84,8 @@ def create_experiment(config: ConfigData) -> Experiment:
             "logging_step": config["logging_step"],
             "mc_config": config["mc_config"],
             "device": config["device"],
+            "full_out": config["full_out"],
+            "clear_memory": config["clear_memory"],
         }
         experiment = OUExperiment(experiment_config)
     if config["experiment"] == "nlg":
@@ -135,6 +139,8 @@ def create_experiment(config: ConfigData) -> Experiment:
             "logging_step": config["logging_step"],
             "mc_config": config["mc_config"],
             "device": config["device"],
+            "full_out": config["full_out"],
+            "clear_memory": config["clear_memory"],
         }
         experiment = NLGExperiment(experiment_config)
     return experiment

@@ -6,6 +6,7 @@ import torch
 import random
 import numpy as np
 
+from pathlib import Path
 from typing import Union
 
 ## defining configuration data type
@@ -19,3 +20,6 @@ OutputData = Union[torch.Tensor, DictionaryData]
 
 ## defining custom model data type 
 ModelData = Union[torch.nn.Module]
+
+## defining custom path data type
+PathData = Union[str, Path]

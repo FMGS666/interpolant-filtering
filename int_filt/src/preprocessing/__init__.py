@@ -1,4 +1,5 @@
 from .preprocessing import (
     IdentityPreproc,
-    StandardizeSim,
+    StandardizeSimHistory,
+    StandardizeSim
 )

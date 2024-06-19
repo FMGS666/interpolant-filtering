@@ -148,3 +148,8 @@ def standardize(tensor, mean, std):
 def dump_config(config, filename):
     with open(filename, "w") as f_handle:
         json.dump(config, f_handle)
+
+## function for dumping a dictionary of tensors to .npz file
+def dump_tensors(filename, tensor_dict):
+    tensor_dict_np = {key: tensor.numpy() for key, tensor in tensor_dict.items()}
+    np.savez_compressed(filename, **tensor_dict_np)

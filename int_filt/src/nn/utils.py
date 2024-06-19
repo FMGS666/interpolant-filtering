@@ -12,7 +12,7 @@ from ...utils import ConfigData, ModelData
 def create_models(config: ConfigData) -> ModelData:
     if config["backbone"] == "mlp":
         ## defining inputs dims
-        input_dims = config["spatial_dims"]*3 + 1 if config["b_net_activate_final"] else config["spatial_dims"]*2 + 1
+        input_dims = config["spatial_dims"]*3 + 1 if config["b_net_amortized"] else config["spatial_dims"]*2 + 1
         ## initializing $b$ backbone
         b_backbone_config = {
             "input_dim": input_dims,

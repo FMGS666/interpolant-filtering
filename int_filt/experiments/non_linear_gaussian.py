@@ -3,6 +3,8 @@ Class for running the experiment on the Ornstein-Uhlenbeck model
 """
 import torch
 
+from typing import Optional
+
 from .common import Experiment
 
 from ..utils import ConfigData, OutputData
@@ -17,7 +19,7 @@ class NLGExperiment(Experiment):
         """
         super(NLGExperiment, self).__init__(config)
     
-    def get_batch(self, train: bool = True) -> OutputData:
+    def get_batch(self, train: bool = True, idx: Optional[int] = None) -> OutputData:
         """
         Samples a batch from the ssm
         """
@@ -28,6 +30,9 @@ class NLGExperiment(Experiment):
         observations = self.ssm.train_sim["observations"]
         ## sampling random time index
         index = torch.randint(num_iters - 1, (1, )).item()
+        ## in case idx is passed 
+        if idx is not None:
+            index = idx
         ## getting current states
         x0 = latent_states[index]
         x1 = latent_states[index + 1]
