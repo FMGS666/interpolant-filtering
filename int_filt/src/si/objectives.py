@@ -30,6 +30,7 @@ class DriftObjective(torch.nn.Module):
         self.mc_config = self.config["mc_config"]
         self.preprocessing = self.config["preprocessing"]
         self.full_out = self.config["full_out"]
+        self.pp_before_interpolant = self.config["pp_before_interpolant"]
 
     def forward(self, batch: InputData) -> OutputData:
         """
@@ -62,12 +63,16 @@ class DriftObjective(torch.nn.Module):
             ## constructing sample dictionary
             mc_batch = {"t": t, "x0": x0, "x1": x1, "xc": xc, "z": z, "y": y}
             ## preprocessing batch
-            mc_batch = self.preprocessing(mc_batch)
+            if self.pp_before_interpolant:
+                mc_batch = self.preprocessing(mc_batch)
             ## computing interpolant and velocity
             xt = self.interpolant.interpolant(mc_batch)
             rt = self.interpolant.velocity(mc_batch)
             ## augmenting batch
             mc_batch["xt"] = xt
+            ## preprocessing batch
+            if not self.pp_before_interpolant:
+                mc_batch = self.preprocessing(mc_batch)
             ## performing forward pass on the b_net
             bt = self.b_net(mc_batch)
             ## storing the sampled drift

@@ -105,7 +105,8 @@ def create_experiment(config: ConfigData) -> Experiment:
             "num_dims": config["num_dims"],
             "num_sims": config["num_sims"],
             "num_iters": config["num_iters"],
-            "step_size": config["step_size"]
+            "step_size": config["step_size"],
+            "num_burn_in_steps": config["num_burn_in_steps"]
         }
         ssm = NON_LINEARITIES[config["non_linearity"]](ssm_config)
         ## initializing interpolant
@@ -141,6 +142,7 @@ def create_experiment(config: ConfigData) -> Experiment:
             "device": config["device"],
             "full_out": config["full_out"],
             "clear_memory": config["clear_memory"],
+            "pp_before_interpolant": config["pp_before_interpolant"]
         }
         experiment = NLGExperiment(experiment_config)
     return experiment

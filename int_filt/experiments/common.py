@@ -31,6 +31,7 @@ class Experiment:
         self.logging_step = self.config["logging_step"]
         self.full_out = self.config["full_out"]
         self.clear_memory = self.config["clear_memory"]
+        self.pp_before_interpolant = self.config["pp_before_interpolant"]
 
     def get_batch(self, train: Optional[bool] = None, idx: Optional[int] = None) -> OutputData:
         """
@@ -51,7 +52,8 @@ class Experiment:
             "interpolant": self.interpolant, 
             "mc_config": self.mc_config,
             "preprocessing": self.preprocessing,
-            "full_out": self.full_out
+            "full_out": self.full_out,
+            "pp_before_interpolant": self.pp_before_interpolant
         }
         Lb = DriftObjective(Lb_config)
         ## allocating memory for storing loss and lr

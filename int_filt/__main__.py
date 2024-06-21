@@ -9,6 +9,7 @@ from .utils import (
     configuration, 
     ensure_reproducibility, 
     dump_config,
+    dump_tensors, 
     move_batch_to_device
 )
 
@@ -58,6 +59,17 @@ if __name__ == "__main__":
     #####################################################################################################################
     ################################################    TRAINING    #####################################################
     #####################################################################################################################
+    ## visualizing standardization 
+    ## standardization
+    batch = experiment.get_batch()
+    print(f"STANDARDIZATION: {experiment.preprocessing.params}")
+    print("BEFORE STANDARDIZATION\n")
+    for k, v in batch.items():
+        print(k, "-> mean: ", v.mean(), ", std: ", v.std(), "shape: ", v.shape)
+    batch = experiment.preprocessing(batch)
+    print("\nAFTER PREPROCESSING\n")
+    for k, v in batch.items():
+        print(k, "-> mean: ", v.mean(), ", std: ", v.std(), "shape: ", v.shape)
     ## initializing optimizer and scheduler
     b_net_optimizer = OPTIMIZERS[config["b_net_optimizer"]](experiment.b_net.backbone.parameters(), lr = config["b_net_lr"])
     b_net_scheduler = SCHEDULERS[config["b_net_scheduler"]]
@@ -70,7 +82,7 @@ if __name__ == "__main__":
         "num_grad_steps": config["b_net_num_grad_steps"],
     }
     ## training b_net 
-    experiment.train(b_net_optim_config)
+    train_dict = experiment.train(b_net_optim_config)
     ## optional logging
     if config["log_results"]:
         ## saving the model
@@ -87,7 +99,7 @@ if __name__ == "__main__":
         "ar_sample_train": config["ar_sample_train"],
     }
     ## sampling from model
-    sample_dict = experiment.ar_sample(batch, config = ar_sample_config)
+    ar_sample_dict = experiment.ar_sample(batch, config = ar_sample_config)
     ## parsing samples dict
     ar_samples = sample_dict["ar_samples"]
     ## displaying the shape of the results
@@ -97,3 +109,10 @@ if __name__ == "__main__":
         drift = sample_dict["drift"]
         diffusion = sample_dict["diffusion"]
         print(f"{trajectory.shape=}, {drift.shape=}, {diffusion.shape=}")
+    if config["log_results"]:
+        ## defining target files
+        ar_dump_file = os.path.join(config["dump_dir"], "ar_sampling_data")
+        train_file = os.path.join(config["dump_dir"], "training_data")
+        ## dumping ar sampling and training dictionaries
+        dump_tensors(ar_dump_file, ar_sample_dict)
+        dump_tensors(train_file, train_dict)

@@ -37,6 +37,7 @@ class SimNonLinearGaussian(SimSSM):
         self.sigma_y = config["sigma_y"]
         self.beta = config["beta"]
         self.step_size = config["step_size"]
+        self.num_burn_in_steps = config["num_burn_in_steps"]
     
     def initial_state(self) -> OutputData:
         """
@@ -76,14 +77,19 @@ class SimNonLinearGaussian(SimSSM):
         ## storing states and observations
         latent_states_store[0] = x
         observation_store[0] = y
+        ## defining iterator
+        num_iterations = self.num_iters + self.num_burn_in_steps
+        iterator = tqdm(range(1, num_iterations))
         ## starting iteration
-        for idx in tqdm(range(1, self.num_iters)):
+        for idx in iterator:
             ## sampling state transition and observation
             x = self.state_transition(x)
             y = self.observation(x)
-            ## storing state and observation
-            latent_states_store[idx] = x
-            observation_store[idx] = y
+            ## storing state and observation after burn in period
+            if idx >= self.num_burn_in_steps:
+                idx = idx - self.num_burn_in_steps
+                latent_states_store[idx] = x
+                observation_store[idx] = y
         ## defining simulation dictionary
         sim = {"latent_states": latent_states_store, "observations": observation_store}
         return sim
