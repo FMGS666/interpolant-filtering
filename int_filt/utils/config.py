@@ -9,12 +9,14 @@ class OPTIONS:
     interpolant_method = ["pffp_v0", "pffp_v1"]
     backbone = ["mlp"]
     b_net_activation = ["relu"]
-    experiment = ["nlg", "ou"]
+    experiment = ["nlg", "nlg-controlled"]
     non_linearity = ["exp", "sin", "cos", "tan"]
-    optimizer = ["adam", "adam-w"]
+    optimizer = ["sgd", "adam", "adam-w"]
     scheduler = ["cosine-annealing", "none"]
     device = ["cuda", "cpu"]
-    preprocessing = ["none", "sim", "sim-history"]
+    preprocessing = ["none", "sim"]
+    observation_model = ["none", "gaussian"]
+    gde = ["none", "interpolant-gde"]
 
 def configuration(args = None):
     ## default output directory
@@ -36,6 +38,9 @@ def configuration(args = None):
     nn_group.add_argument("--b-net-activation", "-bact", default = "relu", help = "The activation of the hidden layers of the $b$ model", choices = OPTIONS.b_net_activation)
     nn_group.add_argument("--b-net-activate-final", "-bactfin", action = "store_true", help = "Whether to activate the last layer for the $b$ model")
     nn_group.add_argument("--b-net-amortized","-bamrt", action = "store_true", help = "Whether to perform amortized learning by concatenating the observation to the input for the $b$ model")
+    nn_group.add_argument("--c-net-hidden-dims", "-chd",  nargs="+", type=int, default = [64], help = "List of integers containing the number of hidden neurons for each layer of the $b$ model")
+    nn_group.add_argument("--c-net-activation", "-cact", default = "relu", help = "The activation of the hidden layers of the $b$ model", choices = OPTIONS.b_net_activation)
+    nn_group.add_argument("--c-net-activate-final", "-cactfin", action = "store_true", help = "Whether to activate the last layer for the $b$ model")
     ## experiment options
     experiment_group = parser.add_argument_group("Experiment Options")
     experiment_group.add_argument("--experiment", "-exp", default = "nlg", help = "The experiment to be run", choices = OPTIONS.experiment)
@@ -60,10 +65,25 @@ def configuration(args = None):
                         help="Where to store the saved models.")
     ## b-net training options
     train_b_net_group = parser.add_argument_group("Training Options")
-    train_b_net_group.add_argument("--b-net-num-grad-steps", "-bngs", default = 400, type = int, help = "The number of gradient steps to be taken during the training of the $b$ model")
+    train_b_net_group.add_argument("--num-grad-steps", "-ngs", default = 400, type = int, help = "The number of gradient steps to be taken during training")
     train_b_net_group.add_argument("--b-net-optimizer", "-bopt", default = "adam-w", help = "The optimizer used for training the $b$ model", choices = OPTIONS.optimizer)
     train_b_net_group.add_argument("--b-net-scheduler", "-bsched", default = "none", help = "The learning rate scheduler for training the $b$ model", choices = OPTIONS.scheduler)
     train_b_net_group.add_argument("--b-net-lr", "-blr", default = 1e-3, type = float, help = "The initial learning rate used for training the $b$ model")
+    train_b_net_group.add_argument("--b-net-amortized-optimizer", "-baopt", default = "adam-w", help = "The optimizer used for training the amortized $b$ model", choices = OPTIONS.optimizer)
+    train_b_net_group.add_argument("--b-net-amortized-scheduler", "-basched", default = "none", help = "The learning rate scheduler for training the amortized $b$ model", choices = OPTIONS.scheduler)
+    train_b_net_group.add_argument("--b-net-amortized-lr", "-balr", default = 1e-3, type = float, help = "The initial learning rate used for training the amortized $b$ model")
+    train_b_net_group.add_argument("--c-net-optimizer", "-copt", default = "adam-w", help = "The optimizer used for training the $c$ model", choices = OPTIONS.optimizer)
+    train_b_net_group.add_argument("--c-net-scheduler", "-csched", default = "none", help = "The learning rate scheduler for training the $c$ model", choices = OPTIONS.scheduler)
+    train_b_net_group.add_argument("--c-net-lr", "-clr", default = 1e-3, type = float, help = "The initial learning rate used for training the $c$ model")
+    ## observation model options
+    observation_model_options = parser.add_argument_group("Observation Model Options")
+    observation_model_options.add_argument("--observation-model", "-os", default = "gaussian", help = "The observation model to be used in the experiments", choices = OPTIONS.observation_model)
+    ## gradient density estimation options
+    gde_options = parser.add_argument_group("Gradient Density Estimation Options")
+    gde_options.add_argument("--gde", "-gde", default = "interpolant-gde", help = "The Gradient Density Estimation method to be used in the experiments", choices = OPTIONS.gde)
+    ## drift control options
+    control_options = parser.add_argument_group("Additional Experiment Options")
+    control_options.add_argument("--controlled", "-ctrl", action = "store_true", help = "Whether to explicitly model the control term in the experiments")
     ## reproducibility options
     reproducibility_group = parser.add_argument_group("Reproducibility Options")
     reproducibility_group.add_argument("--random-seed", "-rs", default = 128, type = int, help = "The random seed for the experiment")
@@ -73,7 +93,6 @@ def configuration(args = None):
     ## preprocessing options
     preprocessing_group = parser.add_argument_group("Preprocessing Options")
     device_group.add_argument("--preprocessing", "-pp", default = "sim", help = "The preprocessing method to be used", choices = OPTIONS.preprocessing)
-    device_group.add_argument("--pp-before-interpolant", "-ppbi", action = "store_true", help = "Whether to apply the preprocessing before evaluating interpolants")
     ## sampling options
     sampling_group = parser.add_argument_group("Sampling Options")
     sampling_group.add_argument("--num-samples", "-ns", default = 500, type = int, help = "The number of samples to be drawn from the learned distribution")

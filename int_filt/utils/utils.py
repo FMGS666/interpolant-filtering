@@ -144,6 +144,16 @@ def standardize(tensor, mean, std):
     tensor = (tensor - mean) / std
     return tensor
 
+## Unstandardizes a tensor with the given mean and standard deviation
+def unstandardize(tensor, mean, std):
+    ## handling device
+    device = tensor.device
+    mean = mean.to(device)
+    std = std.to(device)
+    ## scaling tensor
+    tensor = tensor*std + mean
+    return tensor
+
 ## function for dumping a given configuration dictionary
 def dump_config(config, filename):
     with open(filename, "w") as f_handle:
@@ -153,3 +163,73 @@ def dump_config(config, filename):
 def dump_tensors(filename, tensor_dict):
     tensor_dict_np = {key: tensor.numpy() for key, tensor in tensor_dict.items()}
     np.savez_compressed(filename, **tensor_dict_np)
+
+def inverse_cdf(su, W):
+    """Inverse CDF algorithm for a finite distribution. 
+    (From particles package of Nicolas Chopin)
+        
+    Parameters
+    ----------
+    su: (M,) ndarray
+        M sorted uniform variates (i.e. M ordered points in [0,1]).
+    W: (N,) ndarray
+        a vector of N normalized weights (>=0 and sum to one)
+    Returns
+    -------
+    A: (M,) ndarray
+        a vector of M indices in range 0, ..., N-1
+    """
+    j = 0
+    s = W[0]
+    M = su.shape[0]
+    A = np.empty(M, dtype=np.int64)
+    for n in range(M):
+        while su[n] > s and (j < (M-1)):
+            j += 1
+            s += W[j]
+        A[n] = j
+    return A
+
+def uniform_spacings(N):
+    """ Generate ordered uniform variates in O(N) time.
+    (From particles package of Nicolas Chopin)
+    
+    Parameters
+    ----------
+    N: int (>0)
+        the expected number of uniform variates
+    Returns
+    -------
+    (N,) float ndarray
+        the N ordered variates (ascending order)
+    Note
+    ----
+    This is equivalent to::
+        from numpy import random
+        u = sort(random.rand(N))
+    but the line above has complexity O(N*log(N)), whereas the algorithm
+    used here has complexity O(N).
+    """
+    z = np.cumsum(-np.log(np.random.rand(N + 1)))
+    return z[:-1] / z[-1]
+
+def resampling(W, M):
+    """
+    Multinomial resampling scheme. 
+    (From particles package of Nicolas Chopin)
+    
+    Parameters
+    ----------    
+    W: (N,) ndarray
+        a vector of N normalized weights (>=0 and sum to one)
+    
+    M: int
+        number of ancestor indexes to be sampled
+    
+    Returns
+    -------
+    A: (N,) ndarray
+        a vector of N indices in range 0, ..., N-1
+    """  
+    
+    return torch.from_numpy(inverse_cdf(uniform_spacings(M), W.numpy()))

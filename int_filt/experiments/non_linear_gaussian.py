@@ -22,7 +22,7 @@ class NLGExperiment(Experiment):
         """
         super(NLGExperiment, self).__init__(config)
     
-    def get_batch(self, train: bool = True, idx: Optional[int] = None) -> OutputData:
+    def get_batch(self, train: bool = True, idx: Optional[int] = None, N: Optional[int] = None) -> OutputData:
         """
         Samples a batch from the ssm
         """
@@ -41,6 +41,13 @@ class NLGExperiment(Experiment):
         x1 = latent_states[index + 1]
         y = observations[index + 1]
         xc = x0
+        ## sampling random simulation index
+        if N:
+            index = torch.randint(num_sims - 1, (N, ))
+            x0 = x0[index]
+            x1 = x1[index]
+            y = y[index]
+            xc = xc[index]
         ## constructing the batch
         batch = {"x0": x0.float(), "x1": x1.float(), "xc": xc.float(), "y": y.float()}
         return batch

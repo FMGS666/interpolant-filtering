@@ -14,8 +14,10 @@ from .utils import (
     move_batch_to_device,
     clone_batch,
     standardize,
+    unstandardize,
     dump_config,
-    dump_tensors
+    dump_tensors,
+    resampling
 )
 
 from .config import configuration

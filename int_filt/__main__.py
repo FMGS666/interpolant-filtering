@@ -18,12 +18,14 @@ ACTIVATIONS = {
 }
 
 OPTIMIZERS = {
+    "sgd": torch.optim.SGD,
     "adam": torch.optim.Adam,
     "adam-w": torch.optim.AdamW
 }
 
 SCHEDULERS = {
-    "none": None
+    "none": None,
+    "cosine-annealing": torch.optim.lr_scheduler.CosineAnnealingLR
 }
 
 DEVICES = {
@@ -45,6 +47,7 @@ if __name__ == "__main__":
         dump_config(config, os.path.join(config["dump_dir"], "config.json"))
     ## retrieving activation and device
     config["b_net_activation"] = ACTIVATIONS[config["b_net_activation"]]
+    config["c_net_activation"] = ACTIVATIONS[config["c_net_activation"]]
     config["device"] = DEVICES[config["device"]]
     ## adding mc configuration
     config["mc_config"] = {"num_mc_samples": config["num_mc_samples"]}
@@ -53,8 +56,8 @@ if __name__ == "__main__":
     ## creating experiment
     experiment = create_experiment(config)
     ## dumping particles
-    if config["log_results"]:
-        experiment.ssm.dump_sim(config["dump_dir"])
+    #if config["log_results"]:
+    #    experiment.ssm.dump_sim(config["dump_dir"])
 
     #####################################################################################################################
     ################################################    TRAINING    #####################################################
@@ -62,32 +65,51 @@ if __name__ == "__main__":
     ## visualizing standardization 
     ## standardization
     batch = experiment.get_batch()
+    batch = move_batch_to_device(batch, config["device"])
     print(f"STANDARDIZATION: {experiment.preprocessing.params}")
     print("BEFORE STANDARDIZATION\n")
     for k, v in batch.items():
         print(k, "-> mean: ", v.mean(), ", std: ", v.std(), "shape: ", v.shape)
-    batch = experiment.preprocessing(batch)
+    batch_pp = experiment.preprocessing(batch)
     print("\nAFTER PREPROCESSING\n")
-    for k, v in batch.items():
+    for k, v in batch_pp.items():
         print(k, "-> mean: ", v.mean(), ", std: ", v.std(), "shape: ", v.shape)
     ## initializing optimizer and scheduler
     b_net_optimizer = OPTIMIZERS[config["b_net_optimizer"]](experiment.b_net.backbone.parameters(), lr = config["b_net_lr"])
     b_net_scheduler = SCHEDULERS[config["b_net_scheduler"]]
     if b_net_scheduler is not None:
         b_net_scheduler = b_net_scheduler(b_net_optimizer, config["b_net_num_grad_steps"])
+    ## initializing optimizer and scheduler for optional control term
+    c_net_optimizer = None
+    c_net_scheduler = None
+    if config["controlled"]:
+        c_net_optimizer = OPTIMIZERS[config["c_net_optimizer"]](experiment.c_net.model.backbone.parameters(), lr = config["c_net_lr"])
+        c_net_scheduler = SCHEDULERS[config["c_net_scheduler"]]
+        if c_net_scheduler is not None:
+            c_net_scheduler = c_net_scheduler(c_net_optimizer, config["num_grad_steps"])
     ## constructing optimization config dictionary
-    b_net_optim_config = {
-        "optimizer": b_net_optimizer,
-        "scheduler": b_net_scheduler,
-        "num_grad_steps": config["b_net_num_grad_steps"],
+    optim_config = {
+        "b_net_optimizer": b_net_optimizer,
+        "b_net_scheduler": b_net_scheduler,
+        "b_net_amortized_optimizer": b_net_amortized_optimizer,
+        "b_net_amortized_scheduler": b_net_amortized_scheduler,
+        "c_net_optimizer": c_net_optimizer,
+        "c_net_scheduler": c_net_scheduler,
+        "num_grad_steps": config["num_grad_steps"],
     }
-    ## training b_net 
-    train_dict = experiment.train(b_net_optim_config)
+    ## training
+    if config["controlled"]:
+        train_dict = experiment.train_controlled(optim_config)
+    elif config["amortized"]:
+        train_dict = experiment.train_amortized(optim_config)
+    else:
+        train_dict = experiment.train_drift(optim_config)
     ## optional logging
     if config["log_results"]:
         ## saving the model
         torch.save(experiment.b_net.state_dict(), os.path.join(config["dump_dir"], "b_net.pt"))
-
+        if config["controlled"]:
+            torch.save(experiment.c_net.state_dict(), os.path.join(config["dump_dir"], "c_net.pt"))
     #####################################################################################################################
     ###############################################    GENERATION    ####################################################
     #####################################################################################################################
@@ -106,9 +128,7 @@ if __name__ == "__main__":
     print(f"{samples.shape=},", end = " ")
     if config["full_out"]:
         trajectory = sample_dict["trajectory"]
-        drift = sample_dict["drift"]
-        diffusion = sample_dict["diffusion"]
-        print(f"{trajectory.shape=}, {drift.shape=}, {diffusion.shape=}")
+        print(f"{trajectory.shape=}")
     if config["log_results"]:
         ## defining target files
         ar_dump_file = os.path.join(config["dump_dir"], "ar_sampling_data")
