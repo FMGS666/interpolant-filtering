@@ -19,7 +19,13 @@ class IdentityPreproc(torch.nn.Module):
         ## initializing attributes
         self.config = config
     
-    def forward(self, batch: InputData) -> OutputData:
+    def standardize(self, batch: InputData) -> OutputData:
+        """
+        Performs preprocessing on a batch of data
+        """
+        return batch
+
+    def unstandardize(self, batch: InputData) -> OutputData:
         """
         Performs preprocessing on a batch of data
         """
@@ -57,10 +63,17 @@ class StandardizeSim(torch.nn.Module):
         params = {"mean_x": mean_x, "mean_y": mean_y, "std_x": std_x, "std_y": std_y}
         return params
 
-    def forward(self, batch: InputData) -> OutputData:
+    def standardize(self, batch: InputData) -> OutputData:
         """
         Standardizes on a batch of data
         """
+        ## standardize single tensors with state params
+        if isinstance(batch, torch.Tensor):
+            tensor = batch
+            mean = self.params["mean_x"]
+            std = self.params["std_x"]
+            tensor = standardize(tensor, mean, std)
+            return tensor
         ## defining keys for latent states and observations
         latent_state_keys = ["x0", "x1", "xc", "xt"]
         observation_keys = ["y"]
@@ -84,7 +97,7 @@ class StandardizeSim(torch.nn.Module):
         """
         Unstandardizes on a batch of data
         """
-        ## standardize single tensors with state params
+        ## unstandardize single tensors with state params
         if isinstance(batch, torch.Tensor):
             tensor = batch
             mean = self.params["mean_x"]

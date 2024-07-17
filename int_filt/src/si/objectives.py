@@ -50,24 +50,27 @@ class DriftObjective(torch.nn.Module):
         ## allocating memory
         loss_store = torch.zeros((num_mc_samples), device = x0.device)
         ## sampling for mc estimation
-        mc_samples = torch.rand((num_mc_samples, batch_size), device = x0.device)
-        z_samples = torch.randn((num_mc_samples, *x0.shape), device = device)
+        #mc_samples = torch.rand((num_mc_samples, batch_size), device = x0.device) # uncomment me
+        #z_samples = torch.randn((num_mc_samples, *x0.shape), device = device) # uncomment me 
+        mc_samples = torch.rand((num_mc_samples), device = x0.device) # delete me
+        z = torch.randn_like(x0) # delete me
         ## start mc sampling
         for sample_id in range(num_mc_samples):
             ## get sampled time indices
             t = mc_samples[sample_id]
-            z = z_samples[sample_id]
-            ## constructing sample dictionary
-            mc_batch = {"t": t, "x0": x0, "x1": x1, "xc": xc, "z": z, "y": y}
+            #z = z_samples[sample_id] # uncomment me
+            ## constructing interpolant input dictionary
+            interpolant_batch = {"t": t, "x0": x0, "x1": x1, "z": z, "y": y}
             ## preprocessing batch
-            mc_batch = self.preprocessing(mc_batch)
+            interpolant_batch = self.preprocessing.standardize(interpolant_batch)
             ## computing interpolant and velocity
-            xt = self.interpolant.interpolant(mc_batch)
-            rt = self.interpolant.velocity(mc_batch)
-            ## augmenting batch
-            mc_batch["xt"] = xt
+            xt = self.interpolant.interpolant(interpolant_batch)
+            rt = self.interpolant.velocity(interpolant_batch)
+            ## constructing interpolant input dictionary
+            interpolant_batch["xc"] = xc
+            interpolant_batch["xt"] = xt
             ## performing forward pass on the b_net
-            bt = self.b_net(mc_batch)
+            bt = self.b_net(interpolant_batch)
             ## computing and storing loss
             loss = mse_loss(bt, rt)
             loss_store[sample_id] = loss
@@ -148,7 +151,7 @@ class ControlledDriftObjective(torch.nn.Module):
             sigma = self.interpolant.coeffs.sigma(t)
             sigma = safe_broadcast(sigma, ct)
             ## computing controlled loss
-            c_loss = mse_loss(ct*sigma, rt) + torch.sum(sigma*ct*bt_clone)
+            c_loss = mse_loss(ct*sigma, rt) + 2*torch.sum(sigma*ct*bt_clone)
             ## computing full loss
             loss = b_loss + c_loss
             ## storing losses

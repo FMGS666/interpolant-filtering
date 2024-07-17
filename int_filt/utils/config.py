@@ -10,7 +10,7 @@ class OPTIONS:
     backbone = ["mlp"]
     b_net_activation = ["relu"]
     experiment = ["nlg", "nlg-controlled"]
-    non_linearity = ["exp", "sin", "cos", "tan"]
+    non_linearity = ["exp", "sin", "cos", "tan", "rw", "affine"]
     optimizer = ["sgd", "adam", "adam-w"]
     scheduler = ["cosine-annealing", "none"]
     device = ["cuda", "cpu"]
@@ -93,6 +93,7 @@ def configuration(args = None):
     ## preprocessing options
     preprocessing_group = parser.add_argument_group("Preprocessing Options")
     device_group.add_argument("--preprocessing", "-pp", default = "sim", help = "The preprocessing method to be used", choices = OPTIONS.preprocessing)
+    device_group.add_argument("--postprocessing", "-pstp", action = "store_true", help = "Whether to postprocess the data after the forward pass of the model")
     ## sampling options
     sampling_group = parser.add_argument_group("Sampling Options")
     sampling_group.add_argument("--num-samples", "-ns", default = 500, type = int, help = "The number of samples to be drawn from the learned distribution")

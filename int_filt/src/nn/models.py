@@ -39,7 +39,7 @@ class B_Net(torch.nn.Module):
         ## forward pass
         b = self.backbone(xcat)
         return b
-    
+
 class C_Net(torch.nn.Module):
     """
     Class implementing the $c$ model

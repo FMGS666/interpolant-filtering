@@ -4,5 +4,7 @@ from .non_linear_gaussian import (
     SimNLGSin, 
     SimNLGTan, 
     SimNLGExp,
+    SimNLGRandomWalk,
+    SimNLGAffine
 )
 from .observation_models import GaussianObservationModel

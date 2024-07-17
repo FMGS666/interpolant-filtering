@@ -37,12 +37,12 @@ class StochasticInterpolant(torch.nn.Module):
         raise NotImplementedError
 
     def interpolant(self, batch: InputData) -> OutputData:
+        r"""
+        Computes the stochastic interpolant $x_t = \phi(t, x_0, x_1) + \gamma(t, x_0, x_1) z$
         """
-        Computes the stochastic interpolant
-        """
+        z = batch["z"]
         phi = self.phi(batch)
         gamma = self.gamma(batch)
-        z = batch["z"]
         return phi + gamma*z
 
     """
@@ -64,9 +64,10 @@ class StochasticInterpolant(torch.nn.Module):
         """
         Computes the interpolant velocity
         """
+        z = batch["z"]
         phi_dot = self.phi_dot(batch)
         gamma_dot = self.gamma_dot(batch)
-        return phi_dot + gamma_dot
+        return phi_dot + gamma_dot*z
 
 class PFFPInterpolant(StochasticInterpolant):
     """
@@ -82,7 +83,6 @@ class PFFPInterpolant(StochasticInterpolant):
         """
         super(PFFPInterpolant, self).__init__(config)
         ## parsing configuration dictionary
-        # interpolant configuration 
         self.coeffs = self.config["coeffs"]
 
     """
@@ -116,7 +116,7 @@ class PFFPInterpolant(StochasticInterpolant):
         ## reshaping coefficients
         t = safe_broadcast(t, z)
         sigma = safe_broadcast(sigma, z)
-        return torch.sqrt(t)*sigma*z
+        return torch.sqrt(t)*sigma
 
     """
     Methods for computing the velocity
@@ -149,4 +149,4 @@ class PFFPInterpolant(StochasticInterpolant):
         ## reshaping coefficients
         t = safe_broadcast(t, z)
         sigma_dot = safe_broadcast(sigma_dot, z)
-        return torch.sqrt(t)*sigma_dot*z
+        return torch.sqrt(t)*sigma_dot

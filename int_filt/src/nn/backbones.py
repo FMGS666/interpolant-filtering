@@ -52,9 +52,11 @@ class MLP(torch.nn.Module):
         Performs forward pass on a batch of data
         """
         ## iterate over layer to perfrom forward pass
-        for layer in self.layers:
+        for layer in self.layers[:-1]:
             x = layer(x)
             x = self.activation(x)
+        ## output layer
+        x = self.layers[-1](x)
         ## optional final activation
         x = self.final_activation(x)
         return x

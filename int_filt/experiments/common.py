@@ -36,6 +36,7 @@ class Experiment:
         self.mc_config = self.config["mc_config"]
         self.device = self.config["device"]
         self.preprocessing = self.config["preprocessing"]
+        self.postprocessing = self.config["postprocessing"]
         self.log_results = self.config["log_results"]
         self.logging_step = self.config["logging_step"]
         self.full_out = self.config["full_out"]
@@ -62,13 +63,13 @@ class Experiment:
         optimizer = config["b_net_optimizer"]
         scheduler = config["b_net_scheduler"]
         ## initializing objective function
-        Lb_config = {
+        objective_config = {
             "b_net": self.b_net, 
             "interpolant": self.interpolant, 
             "mc_config": self.mc_config,
             "preprocessing": self.preprocessing,
         }
-        Lb = DriftObjective(Lb_config)
+        objective = DriftObjective(objective_config)
         ## allocating memory for storing loss and lr
         loss_history = torch.zeros((config["num_grad_steps"]))
         lr_history = torch.zeros((config["num_grad_steps"]))
@@ -80,7 +81,7 @@ class Experiment:
             batch = self.get_batch()
             batch = move_batch_to_device(batch, self.device)
             ## estimating loss
-            loss_dict = Lb.forward(batch)
+            loss_dict = objective.forward(batch)
             # parsing loss dictionary
             loss = loss_dict["loss"]
             ## retrieving loss value
@@ -124,14 +125,14 @@ class Experiment:
         c_net_optimizer = config["c_net_optimizer"]
         c_net_scheduler = config["c_net_scheduler"]
         ## initializing objective function
-        Lb_config = {
+        objective_config = {
             "b_net": self.b_net,
             "c_net": self.c_net, 
             "interpolant": self.interpolant, 
             "mc_config": self.mc_config,
             "preprocessing": self.preprocessing,
         }
-        Lb = ControlledDriftObjective(Lb_config)
+        objective = ControlledDriftObjective(objective_config)
         ## allocating memory for storing loss and lr
         loss_history = torch.zeros((config["num_grad_steps"]))
         b_loss_history = torch.zeros((config["num_grad_steps"]))
@@ -146,7 +147,7 @@ class Experiment:
             batch = self.get_batch()
             batch = move_batch_to_device(batch, self.device)
             ## estimating loss
-            loss_dict = Lb.forward(batch)
+            loss_dict = objective.forward(batch)
             # parsing loss dictionary
             loss = loss_dict["loss"]
             b_loss = loss_dict["b_loss"]
@@ -219,7 +220,7 @@ class Experiment:
             x_clone = x.clone()
             xc_clone = xc.clone()
             y_clone = y.clone()
-            # getting the time and stepsize
+            # getting the current time and stepsize
             delta_t = stepsizes[n]
             t = time[n]
             # sampling noise
@@ -232,10 +233,13 @@ class Experiment:
             ## constructing current batch
             current_batch = {"t": t, "xc": xc_clone, "xt": x_clone, "y": y_clone}
             ## preprocessing batch 
-            current_batch = self.preprocessing(current_batch)
-            ## forward pass on the models
+            current_batch = self.preprocessing.standardize(current_batch)
+            ## forward pass on the model
             with torch.no_grad():
                 drift = self.b_net(current_batch)
+            ## postprocessing the batch
+            if self.postprocessing:
+                drift = self.preprocessing.unstandardize(drift)
             # computing diffusion term
             diffusion = sigma_t*W  
             # euler step
@@ -279,7 +283,7 @@ class Experiment:
             x_clone = x.clone()
             xc_clone = xc.clone()
             y_clone = y.clone()
-            # getting the time and stepsize
+            # getting the current time and stepsize
             delta_t = stepsizes[n]
             t = time[n]
             # sampling noise
@@ -292,11 +296,15 @@ class Experiment:
             ## constructing current batch
             current_batch = {"t": t, "xc": xc_clone, "xt": x_clone, "y": y_clone}
             ## preprocessing batch 
-            current_batch = self.preprocessing(current_batch)
+            current_batch = self.preprocessing.standardize(current_batch)
             ## forward pass on the models
             with torch.no_grad():
                 drift = self.b_net(current_batch)
             Z = self.c_net(current_batch)
+            ## postprocessing the batch
+            if self.postprocessing:
+                drift = self.preprocessing.unstandardize(drift)
+                Z = self.preprocessing.unstandardize(Z)
             control = -Z.clone().detach()
             ## computing controlled drift and diffusion
             controlled_drift = drift + sigma_t*control
@@ -330,7 +338,7 @@ class Experiment:
         Samples  from the model by simulating the SDE $dX_t = b(t, X_t)dt + \sigma_tdB_t$
         """
         ## retrieving necessary data
-        num_sims = self.ssm.num_sims
+        num_sims = batch["x0"].shape[0]
         num_dims = self.ssm.num_dims
         ## allocating memory
         samples_store = torch.zeros(config["num_samples"], num_sims, num_dims)
@@ -343,9 +351,9 @@ class Experiment:
             ## simulating sde
             sde_dict = self.simulate_sde(batch, config)
             ## storing results
-            samples_store[sample_id] = sde_dict["x"].clone().detach().cpu()
+            samples_store[sample_id] = sde_dict["x"].cpu()
             if self.full_out:
-                trajectory_store[sample_id] = sde_dict["trajectory"].clone().detach().cpu()
+                trajectory_store[sample_id] = sde_dict["trajectory"]
             ## cleaning up memory
             if self.clear_memory:
                 del sde_dict 
@@ -366,7 +374,7 @@ class Experiment:
         x = batch["x0"]
         y = batch["y"]
         ## retrieving necessary data
-        num_sims = self.ssm.num_sims
+        num_sims = x.shape[0]
         num_dims = self.ssm.num_dims
         ## constructing sde configuration dictionary
         sde_config = {"num_time_steps": config["num_time_steps"]}
@@ -374,8 +382,6 @@ class Experiment:
         ar_samples_store = torch.zeros((config["num_ar_steps"], num_sims, num_dims))
         if self.full_out:
             trajectory_store = torch.zeros((config["num_ar_steps"], config["num_time_steps"], num_sims, num_dims))
-            drift_store = torch.zeros((config["num_ar_steps"], config["num_time_steps"], num_sims, num_dims))
-            diffusion_store = torch.zeros((config["num_ar_steps"], config["num_time_steps"], num_sims, num_dims))
         ## defining iterator
         iterator = tqdm(range(config["num_ar_steps"]))
         ## iterating over each ar step
@@ -387,7 +393,7 @@ class Experiment:
             ## parsing sde dictionary        
             x = sde_dict["x"]
             ## storing results
-            ar_samples_store[ar_step] = x
+            ar_samples_store[ar_step] = x.cpu()
             if self.full_out:
                 trajectory_store[ar_step] = sde_dict["trajectory"]
             ## cleaning up memory
@@ -423,7 +429,7 @@ class Experiment:
         iterator = tqdm(range(config["num_obs"]))
         ## iterating over each observation step
         for observation_idx in iterator:
-            ## constructing batch with only current observation
+            ## retrieving current observation
             y = y_store[observation_idx]
             y = y.repeat((config["num_particles"], 1))
             ## constructing current batch
@@ -434,8 +440,7 @@ class Experiment:
             x = controlled_sde_dict["x"]
             v = controlled_sde_dict["v"]
             ## computing likelihood
-            x_clone = x.clone().detach()
-            likelihood_batch = {"x": x_clone, "y": y}
+            likelihood_batch = {"x": x, "y": y}
             likelihood = self.observation_model.log_prob(likelihood_batch)
             likelihood = torch.unsqueeze(likelihood, dim = 1)
             ## computing normalized weights

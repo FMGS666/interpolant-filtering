@@ -116,6 +116,8 @@ def safe_cat(batch, cat_keys, to_broadcast = [], dim = -1, unsqueeze_last_dim = 
             print(f"OUTPUT.safe_cat::", tensor.shape)
     ## now we can perform concatenation 
     xcat = torch.cat(to_cat, dim = dim)
+    if debug:
+        print(f"OUTPUT.safe_cat::{xcat.shape}")
     return xcat
 
 ## function for moving batch of tensors to device
@@ -164,21 +166,9 @@ def dump_tensors(filename, tensor_dict):
     tensor_dict_np = {key: tensor.numpy() for key, tensor in tensor_dict.items()}
     np.savez_compressed(filename, **tensor_dict_np)
 
+## Inverse CDF algorithm for a finite distribution.     
+## (From particles package of Nicolas Chopin)
 def inverse_cdf(su, W):
-    """Inverse CDF algorithm for a finite distribution. 
-    (From particles package of Nicolas Chopin)
-        
-    Parameters
-    ----------
-    su: (M,) ndarray
-        M sorted uniform variates (i.e. M ordered points in [0,1]).
-    W: (N,) ndarray
-        a vector of N normalized weights (>=0 and sum to one)
-    Returns
-    -------
-    A: (M,) ndarray
-        a vector of M indices in range 0, ..., N-1
-    """
     j = 0
     s = W[0]
     M = su.shape[0]
@@ -190,46 +180,13 @@ def inverse_cdf(su, W):
         A[n] = j
     return A
 
+## Generate ordered uniform variates in O(N) time. 
+## (From particles package of Nicolas Chopin)
 def uniform_spacings(N):
-    """ Generate ordered uniform variates in O(N) time.
-    (From particles package of Nicolas Chopin)
-    
-    Parameters
-    ----------
-    N: int (>0)
-        the expected number of uniform variates
-    Returns
-    -------
-    (N,) float ndarray
-        the N ordered variates (ascending order)
-    Note
-    ----
-    This is equivalent to::
-        from numpy import random
-        u = sort(random.rand(N))
-    but the line above has complexity O(N*log(N)), whereas the algorithm
-    used here has complexity O(N).
-    """
     z = np.cumsum(-np.log(np.random.rand(N + 1)))
     return z[:-1] / z[-1]
-
+     
+## Multinomial resampling scheme.
+## (From particles package of Nicolas Chopin)
 def resampling(W, M):
-    """
-    Multinomial resampling scheme. 
-    (From particles package of Nicolas Chopin)
-    
-    Parameters
-    ----------    
-    W: (N,) ndarray
-        a vector of N normalized weights (>=0 and sum to one)
-    
-    M: int
-        number of ancestor indexes to be sampled
-    
-    Returns
-    -------
-    A: (N,) ndarray
-        a vector of N indices in range 0, ..., N-1
-    """  
-    
     return torch.from_numpy(inverse_cdf(uniform_spacings(M), W.numpy()))

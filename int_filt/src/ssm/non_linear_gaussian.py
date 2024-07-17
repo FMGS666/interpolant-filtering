@@ -19,7 +19,7 @@ from ...utils import (
     dump_tensors
 )
 
-class SimNonLinearGaussian(SimSSM):
+class GaussianSSM(SimSSM):
     """
     Class implementing a non-linear gaussian state transition
     with gaussian observation model
@@ -28,7 +28,7 @@ class SimNonLinearGaussian(SimSSM):
         """
         Constructor with custom config dictionary
         """
-        super(SimNonLinearGaussian, self).__init__(config)
+        super(GaussianSSM, self).__init__(config)
         ## parsing configuration dictionary
         self.num_sims = config["num_sims"]
         self.num_dims = config["num_dims"]
@@ -113,7 +113,7 @@ class SimNonLinearGaussian(SimSSM):
 ##############################################################################################################
 ##############################################################################################################
 
-class SimNLGCos(SimNonLinearGaussian):
+class SimNLGCos(GaussianSSM):
     """
     Class implementing a non-linear gaussian state transition
     with gaussian observation model
@@ -130,12 +130,12 @@ class SimNLGCos(SimNonLinearGaussian):
     def non_linearity(self, x: InputData) -> OutputData:
         r"""
         Computes the non-linear update
-        $f(x) = x - \delta_t \operatorname{cos}(x)$
+        $f(x) = x - \delta_t \operatorname{cos}(\beta x)$
         """
         update = torch.cos(self.beta*x)
         return x + self.step_size*update
 
-class SimNLGSin(SimNonLinearGaussian):
+class SimNLGSin(GaussianSSM):
     """
     Class implementing a non-linear gaussian state transition
     with gaussian observation model
@@ -152,12 +152,12 @@ class SimNLGSin(SimNonLinearGaussian):
     def non_linearity(self, x: InputData) -> OutputData:
         r"""
         Computes the non-linear update
-        $f(x) = x - \delta_t \operatorname{exp} \{x\}$
+        $f(x) = x - \delta_t \operatorname{sin} (\beta x)$
         """
         update = torch.sin(self.beta*x)
         return x + self.step_size*update
 
-class SimNLGTan(SimNonLinearGaussian):
+class SimNLGTan(GaussianSSM):
     """
     Class implementing a non-linear gaussian state transition
     with gaussian observation model
@@ -174,7 +174,7 @@ class SimNLGTan(SimNonLinearGaussian):
     def non_linearity(self, x: InputData) -> OutputData:
         r"""
         Computes the non-linear update
-        $f(x) = x - \delta_t \operatorname{exp} \{x\}$
+        $f(x) = x - \delta_t \operatorname{tan} (\beta x)$
         """
         update = torch.tan(self.beta*x)
         return x + self.step_size*update
@@ -186,7 +186,7 @@ class SimNLGTan(SimNonLinearGaussian):
 ##############################################################################################################
 ##############################################################################################################
 
-class SimNLGExp(SimNonLinearGaussian):
+class SimNLGExp(GaussianSSM):
     """
     Class implementing a non-linear gaussian state transition
     with gaussian observation model
@@ -203,7 +203,60 @@ class SimNLGExp(SimNonLinearGaussian):
     def non_linearity(self, x: InputData) -> OutputData:
         r"""
         Computes the non-linear update
-        $f(x) = x - \delta_t \operatorname{exp} \{x\}$
+        $f(x) = x - \delta_t \operatorname{exp} \{\beta x\}$
         """
         update = torch.exp(-self.beta*x)
         return x + self.step_size*update
+
+##############################################################################################################
+##############################################################################################################
+################################### DEFINING THE NON LINEARITIES #############################################
+###################################             OTHERS           #############################################
+##############################################################################################################
+##############################################################################################################
+
+class SimNLGRandomWalk(GaussianSSM):
+    """
+    Class implementing a non-linear gaussian state transition
+    with gaussian observation model
+    """
+    def __init__(self, config: ConfigData) -> None:
+        """
+        Constructor with custom config dictionary
+        """
+        super(SimNLGRandomWalk, self).__init__(config)
+        ## running the simulations
+        self.train_sim = self.simulate()
+        self.test_sim = self.simulate()
+
+    def non_linearity(self, x: InputData) -> OutputData:
+        r"""
+        Computes the non-linear update
+        $f(x) = x$
+        """
+        return x
+
+class SimNLGAffine(GaussianSSM):
+    """
+    Class implementing a non-linear gaussian state transition
+    with gaussian observation model
+    """
+    def __init__(self, config: ConfigData) -> None:
+        """
+        Constructor with custom config dictionary
+        """
+        super(SimNLGAffine, self).__init__(config)
+        ## retrieve affine transformation
+        self.A = self.config["A"]
+        self.b = self.config["b"]
+        ## running the simulations
+        self.train_sim = self.simulate()
+        self.test_sim = self.simulate()
+
+    def non_linearity(self, x: InputData) -> OutputData:
+        r"""
+        Computes the affine update
+        $f(x) = Ax + b$
+        """
+        x = torch.matmul(self.A, x) + self.b
+        return x        

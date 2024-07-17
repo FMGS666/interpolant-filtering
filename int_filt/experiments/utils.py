@@ -18,6 +18,8 @@ from ..src import (
     SimNLGSin, 
     SimNLGTan,
     SimNLGExp,
+    SimNLGRandomWalk,
+    SimNLGAffine,
     IdentityPreproc,
     StandardizeSim,
     GaussianObservationModel,
@@ -31,6 +33,8 @@ NON_LINEARITIES = {
     "sin": SimNLGSin,
     "tan": SimNLGTan,
     "exp": SimNLGExp,
+    "rw": SimNLGRandomWalk,
+    "affine": SimNLGAffine,
 }
 
 PREPROCESSING = {
@@ -92,6 +96,7 @@ def create_experiment(config: ConfigData) -> Experiment:
             "ssm": ssm,
             "preprocessing": preprocessing,
             "writer": writer,
+            "postprocessing": config["postprocessing"],
             "log_results": config["log_results"], 
             "logging_step": config["logging_step"],
             "mc_config": config["mc_config"],
@@ -160,6 +165,7 @@ def create_experiment(config: ConfigData) -> Experiment:
             "observation_model": observation_model,
             "preprocessing": preprocessing,
             "writer": writer,
+            "postprocessing": config["postprocessing"],
             "log_results": config["log_results"], 
             "logging_step": config["logging_step"],
             "mc_config": config["mc_config"],
